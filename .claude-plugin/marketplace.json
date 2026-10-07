@@ -1,0 +1,17 @@
+{
+  "name": "avocadosmasher",
+  "owner": {
+    "name": "김영우",
+    "url": "https://github.com/avocadosmasher"
+  },
+  "description": "직접 만들어 쓰는 에이전트 스킬 모음을 Claude Code 플러그인으로 설치할 수 있게 한다.",
+  "plugins": [
+    {
+      "name": "skill-storage",
+      "source": "./",
+      "description": "직접 만들어 매일 쓰는 에이전트 스킬 모음 (게이트 TDD, 후보 캡처 비교 등).",
+      "category": "development",
+      "keywords": ["skills", "tdd", "workflow", "screenshot"]
+    }
+  ]
+}

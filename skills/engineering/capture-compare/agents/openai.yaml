@@ -1,0 +1,3 @@
+interface:
+  display_name: "Capture Compare"
+  short_description: "시각 결정 전 후보 캡처 비교"

@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+
+# 로컬 전용 설정과 캐시
+.claude/settings.local.json
+graft/.cache/
