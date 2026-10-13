@@ -1,5 +1,9 @@
 # skill-storage
 
+## idea-bank-viewer 0.2.1
+
+- `bankPath`를 선택 항목(`required: false`)으로 표시했습니다. 비워 두는 것이 기본 사용법인데 설치할 때 "userConfig option not yet set" 안내가 뜨던 문제를 고쳤습니다.
+
 ## 1.4.0
 
 - Productivity 분류에 `idea-banking`을 추가했습니다 (model-invoked): 떠오른 아이디어를 원문 그대로 로컬 Markdown 파일에 바로 기록하고, 나중에 검색·비교·구체화합니다. 저장 위치는 환경 변수 `IDEA_BANK_PATH`로 정하고, 없으면 홈 폴더의 `idea-bank/`를 씁니다.
