@@ -6,7 +6,7 @@
 
 ## 설치
 
-두 가지 방법이 있습니다. **Claude Code 플러그인**은 전체 묶음을 읽기 전용으로 설치하고 업데이트를 받아 쓰는 방식이고, **skills.sh**는 스킬 파일을 내 프로젝트에 복사해 직접 고쳐 쓰는 방식입니다. 둘 중 하나만 고르세요. 둘 다 설치하면 같은 스킬이 두 번 잡힙니다.
+두 가지 방법이 있습니다. **플러그인**(Claude Code, Codex)은 전체 묶음을 읽기 전용으로 설치하고 업데이트를 받아 쓰는 방식이고, **skills.sh**는 스킬 파일을 내 프로젝트에 복사해 직접 고쳐 쓰는 방식입니다. 에이전트마다 둘 중 하나만 고르세요. 둘 다 설치하면 같은 스킬이 두 번 잡힙니다.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -23,7 +23,19 @@ claude plugin install skill-storage@avocadosmasher
 </details>
 
 <details>
-<summary><strong>Codex, 그 밖의 에이전트</strong></summary>
+<summary><strong>Codex</strong></summary>
+
+```bash
+codex plugin marketplace add avocadosmasher/skill-storage
+codex plugin add skill-storage@avocadosmasher
+```
+
+Codex는 이 저장소의 Claude Code 마켓플레이스 매니페스트를 그대로 읽습니다. 업데이트는 `codex plugin marketplace upgrade avocadosmasher`로 받습니다. 마켓플레이스를 새로 받으면 설치된 플러그인도 새 버전으로 바뀝니다.
+
+</details>
+
+<details>
+<summary><strong>skills.sh (Codex, 그 밖의 에이전트)</strong></summary>
 
 ```bash
 npx skills@latest add avocadosmasher/skill-storage
