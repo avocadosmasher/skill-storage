@@ -1,5 +1,9 @@
 # skill-storage
 
+## 1.3.0
+
+- Engineering 분류에 `find-skills`를 추가했습니다 (model-invoked): 사용자가 원하는 기능이 이미 설치할 수 있는 스킬로 있는지 `npx skills` CLI로 찾아보고, 설치 수와 출처를 확인해 추천합니다. [vercel-labs/skills](https://github.com/vercel-labs/skills)의 `skills/find-skills` 스킬을 그대로 들여왔습니다. 벤더링한 파일은 원문(영어)을 유지합니다. 출처와 범위는 스킬 폴더의 `CREDITS.md`에 있습니다.
+
 ## 1.2.0
 
 - Engineering 분류에 `archify`를 추가했습니다 (model-invoked): 아이디어, 계획, 코드베이스를 탐색 가능한 인터랙티브 HTML 다이어그램(아키텍처·워크플로·시퀀스·데이터플로·라이프사이클)으로 만듭니다. [tt-a1i/archify](https://github.com/tt-a1i/archify)의 스킬 패키지를 런타임에 필요한 범위로 그대로 들여왔습니다. 벤더링한 파일은 원문(영어)을 유지합니다. 출처와 범위는 스킬 폴더의 `CREDITS.md`에 있습니다.
