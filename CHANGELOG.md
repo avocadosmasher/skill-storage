@@ -1,5 +1,10 @@
 # skill-storage
 
+## 1.4.0
+
+- Productivity 분류에 `idea-banking`을 추가했습니다 (model-invoked): 떠오른 아이디어를 원문 그대로 로컬 Markdown 파일에 바로 기록하고, 나중에 검색·비교·구체화합니다. 저장 위치는 환경 변수 `IDEA_BANK_PATH`로 정하고, 없으면 홈 폴더의 `idea-bank/`를 씁니다.
+- 마켓플레이스에 선택 설치용 mod `idea-bank-viewer` 0.2.0을 별도 플러그인으로 추가했습니다: `/ideas`로 `idea-banking`의 기록을 패널에서 훑어보고 검색합니다. `skill-storage`를 설치해도 따라 들어가지 않고, `claude plugin install idea-bank-viewer@avocadosmasher`로 직접 설치해야 합니다. 이유는 [ADR 0002](./.agents/adr/0002-optional-mods-as-separate-plugins.md)에 있습니다.
+
 ## 1.3.1
 
 - `gated-tdd`의 작업 결과 보고 형식을 바꿨습니다. 개조식·두괄식을 모든 사용자 대상 응답에 적용하도록 명시했고, 4절("수동 테스트 가이드 형식")을 "작업 결과 보고 형식"으로 바꿔 판정 종류를 둘로 나눴습니다: 방향·스펙 판정에는 선택한 안·버린 대안·trade-off를 적는 "판단 재료", 실행해서 보는 판정에는 조작과 기대 결과를 적는 "확인 방법". 스킬 규칙을 인용하는 메타 설명과 같은 사실의 중복 서술을 금지했습니다.

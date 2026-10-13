@@ -1,0 +1,4 @@
+interface:
+  display_name: "Idea Banking"
+  short_description: "떠오른 아이디어를 빠르게 기록하고 다시 찾아 구체화합니다"
+  default_prompt: "$idea-banking 지금 떠오른 아이디어를 기록하고 나중에 다시 살펴볼 수 있게 정리해줘."

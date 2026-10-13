@@ -12,6 +12,13 @@
       "description": "직접 만들어 매일 쓰는 에이전트 스킬 모음 (게이트 TDD, 후보 캡처 비교 등).",
       "category": "development",
       "keywords": ["skills", "tdd", "workflow", "screenshot"]
+    },
+    {
+      "name": "idea-bank-viewer",
+      "source": "./mods/idea-bank-viewer",
+      "description": "idea-banking 스킬로 저장한 아이디어를 훑어보는 /ideas 패널 (선택 설치하는 Claude Code mod).",
+      "category": "productivity",
+      "keywords": ["mod", "ideas", "pane"]
     }
   ]
 }

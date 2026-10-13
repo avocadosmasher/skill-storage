@@ -1,7 +1,7 @@
 {
   "name": "skill-storage",
-  "version": "1.3.1",
-  "description": "직접 만들어 매일 쓰는 에이전트 스킬 모음: 게이트 TDD(사용자 '통과' 후 커밋), 시각 결정용 후보 캡처 비교, 인터랙티브 다이어그램 생성, 스킬 검색·설치 등.",
+  "version": "1.4.0",
+  "description": "직접 만들어 매일 쓰는 에이전트 스킬 모음: 게이트 TDD(사용자 '통과' 후 커밋), 시각 결정용 후보 캡처 비교, 인터랙티브 다이어그램 생성, 스킬 검색·설치, 아이디어 기록 등.",
   "author": {
     "name": "김영우",
     "url": "https://github.com/avocadosmasher"
@@ -16,7 +16,8 @@
     "screenshot",
     "playwright",
     "diagram",
-    "skill-discovery"
+    "skill-discovery",
+    "ideas"
   ],
   "skills": [
     "./skills/engineering/gated-tdd",
@@ -25,6 +26,7 @@
     "./skills/engineering/find-skills",
     "./skills/productivity/eli5",
     "./skills/productivity/grill-me-plus",
-    "./skills/productivity/jasoseo-coach"
+    "./skills/productivity/jasoseo-coach",
+    "./skills/productivity/idea-banking"
   ]
 }

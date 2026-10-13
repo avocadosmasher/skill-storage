@@ -1,4 +1,4 @@
-이 저장소는 에이전트 스킬 모음이다. 저장소 전체가 Claude Code 플러그인 하나(`skill-storage`)이고, 동시에 그 플러그인 하나만 담은 마켓플레이스(`avocadosmasher`)다.
+이 저장소는 에이전트 스킬 모음이다. 저장소 전체가 Claude Code 플러그인 하나(`skill-storage`)이고, 동시에 그 플러그인과 선택 설치용 mod들을 담은 마켓플레이스(`avocadosmasher`)다.
 
 ## 분류 폴더
 
@@ -23,6 +23,15 @@
 - 스킬마다 `SKILL.md` 옆에 `agents/openai.yaml`(Codex 메타데이터)을 둔다.
 - `CHANGELOG.md`에 무엇이 바뀌었는지 적고, 릴리스할 때 `.claude-plugin/plugin.json`의 `version`을 올린다. 설치한 사용자는 `version`이 바뀌어야 업데이트를 받는다.
 - 매니페스트를 고친 뒤에는 `claude plugin validate .`로 확인한다. "CLAUDE.md at the plugin root is not loaded" 경고는 예상된 것이다: 이 CLAUDE.md는 저장소를 고치는 에이전트용이지 플러그인 사용자용이 아니다. 그 밖의 경고와 오류는 고친다.
+
+## mod
+
+스킬을 돕는 Claude Code mod(함수 훅 플러그인)는 `mods/<mod 이름>/`에 두고, `skill-storage`에 합치지 않고 `.claude-plugin/marketplace.json`에 별도 플러그인으로 등록한다. 사용자가 골라서 설치하게 하기 위해서다([ADR 0002](./.agents/adr/0002-optional-mods-as-separate-plugins.md)).
+
+- 함께 쓰는 스킬이 정식 공개 분류에 있을 때만 등록하고, 최상위 `README.md`와 그 스킬의 docs 페이지에 설치 방법을 적는다.
+- 최상위 `README.md`의 mod 표에 그 mod가 쓰는 권한을 적는다. `claude plugin validate mods/<mod 이름>`이 보여 주는 호출(`$.fs`, `$.process`, `$.env` 등)과 맞춘다.
+- mod를 고치면 `claude plugin test mods/<mod 이름>`과 `claude plugin validate mods/<mod 이름>`을 실행하고, mod의 `plugin.json` `version`을 올린다. `skill-storage`의 `version`과는 따로 간다.
+- 개인 경로 같은 자기 환경 값을 기본값으로 넣지 않는다.
 
 ## 스킬 작성 규칙
 

@@ -1,0 +1,20 @@
+{
+  "name": "idea-bank-viewer",
+  "version": "0.2.0",
+  "description": "idea-banking 스킬로 저장한 아이디어를 요약으로 훑어보고, 원문과 AI 첨언을 나눠 보는 패널 (/ideas)",
+  "author": {
+    "name": "김영우",
+    "url": "https://github.com/avocadosmasher"
+  },
+  "repository": "https://github.com/avocadosmasher/skill-storage",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "bankPath": {
+      "type": "string",
+      "title": "아이디어 뱅크 폴더",
+      "description": "비워 두면 환경 변수 IDEA_BANK_PATH, 그것도 없으면 홈 폴더의 idea-bank를 쓴다 (idea-banking 스킬과 같은 규칙)",
+      "default": ""
+    }
+  }
+}

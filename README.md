@@ -20,6 +20,18 @@ claude plugin install skill-storage@avocadosmasher
 
 설치된 스킬은 `skill-storage:gated-tdd`처럼 플러그인 이름이 앞에 붙습니다. 업데이트는 `claude plugin marketplace update avocadosmasher`로 받거나, `/plugin` → Marketplaces에서 자동 업데이트를 켭니다.
 
+**선택 설치: mod.** 일부 스킬에는 Claude Code 화면에 패널이나 명령을 더하는 mod가 따로 있습니다. mod는 설치한 세션에서 파일을 읽는 등 스킬보다 넓은 권한으로 동작하므로 `skill-storage`에 넣지 않았습니다. 코드를 확인하고 원할 때만 설치하세요.
+
+| mod | 하는 일 | 함께 쓰는 스킬 | 쓰는 권한 |
+| --- | --- | --- | --- |
+| [idea-bank-viewer](./mods/idea-bank-viewer/) | `/ideas`로 저장한 아이디어를 패널에서 훑어보고 검색한다 | `idea-banking` | 파일 읽기(아이디어 폴더), 환경 변수 읽기(`IDEA_BANK_PATH`, `HOME`, `USERPROFILE`). 파일 쓰기·프로세스 실행·네트워크는 쓰지 않는다 |
+
+설치 전에 `claude plugin validate`로 mod가 실제로 부르는 기능을 직접 확인할 수 있습니다(저장소를 받은 뒤 `claude plugin validate mods/<mod 이름>`).
+
+```bash
+claude plugin install idea-bank-viewer@avocadosmasher
+```
+
 </details>
 
 <details>
@@ -97,6 +109,7 @@ Codex 등은 `~/.agents/skills/`에 같은 방식으로 복사합니다.
 - **[eli5](./skills/productivity/eli5/SKILL.md)**: 아무것도 모르는 사람에게 설명하듯, 큰 그림과 아주 적은 글로 된 HTML 페이지를 만들어 주제를 설명한다. Thariq Shihipar의 커뮤니티 플러그인을 그대로 옮겼다([CREDITS](./skills/productivity/eli5/CREDITS.md)).
 - **[grill-me-plus](./skills/productivity/grill-me-plus/SKILL.md)**: 계획이나 설계를 위험한 결정부터 집요하게 캐물어 공통 이해에 이르고, 정한 결정을 `DECISIONS.md`에 바로바로 기록한다. Matt Pocock의 `grill-me`를 바탕으로 했다([CREDITS](./skills/productivity/grill-me-plus/CREDITS.md)).
 - **[jasoseo-coach](./skills/productivity/jasoseo-coach/SKILL.md)**: 헤드헌터 관점으로 자기소개서를 함께 쓰고 검토한다. 재료 수집, JD 리서치, 초안, 글자수 관리, 검토 루프, 면접 예상 질문까지.
+- **[idea-banking](./skills/productivity/idea-banking/SKILL.md)**: 떠오른 도구·스킬·자동화·학습 아이디어를 원문 그대로 로컬 Markdown 파일에 바로 기록하고, 나중에 검색·비교·구체화한다. `/ideas` 패널 mod를 따로 설치할 수 있다.
 
 ## 저장소 구조
 
@@ -107,6 +120,7 @@ skills/
   misc/            보관용, 공개 목록과 플러그인에서 제외
   in-progress/     베타, 공개는 하되 플러그인에서 제외
   deprecated/      더 쓰지 않음
+mods/                  선택 설치하는 Claude Code mod (마켓플레이스의 별도 플러그인)
 docs/<분류>/<스킬>.md   사람이 읽는 스킬 설명
 .claude-plugin/        플러그인과 마켓플레이스 정의
 .agents/               이 저장소를 관리하는 규칙과 설계 결정
