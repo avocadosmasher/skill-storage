@@ -20,19 +20,7 @@ claude plugin install skill-storage@avocadosmasher
 
 설치된 스킬은 `skill-storage:gated-tdd`처럼 플러그인 이름이 앞에 붙습니다. 업데이트는 `claude plugin marketplace update avocadosmasher`로 받거나, `/plugin` → Marketplaces에서 자동 업데이트를 켭니다.
 
-**선택 설치: mod.** 일부 스킬에는 Claude Code 화면에 패널이나 명령을 더하는 mod가 따로 있습니다. mod는 설치한 세션에서 파일을 읽는 등 스킬보다 넓은 권한으로 동작하므로 `skill-storage`에 넣지 않았습니다. 코드를 확인하고 원할 때만 설치하세요.
-
-| mod | 하는 일 | 함께 쓰는 스킬 | 쓰는 권한 |
-| --- | --- | --- | --- |
-| [idea-bank-viewer](./mods/idea-bank-viewer/) | `/ideas`로 저장한 아이디어를 패널에서 훑어보고 검색한다 | `idea-banking` | 파일 읽기(아이디어 폴더), 환경 변수 읽기(`IDEA_BANK_PATH`, `HOME`, `USERPROFILE`). 파일 쓰기·프로세스 실행·네트워크는 쓰지 않는다 |
-| [gated-tdd-budget](./mods/gated-tdd-budget/) | `git commit` 직전에 컨텍스트 사용률과 사용 한도를 `.git/gated-tdd-budget.json`에 남겨, 예산 신호가 단위 수 대신 실제 수치로 판단하게 한다 | `gated-tdd` | 세션 사용량 읽기, 파일 읽기(작업 폴더에서 위로 `.git` 찾기), 파일 쓰기(`.git/gated-tdd-budget.json` 하나). 프로세스 실행·네트워크·환경 변수는 쓰지 않는다 |
-
-설치 전에 `claude plugin validate`로 mod가 실제로 부르는 기능을 직접 확인할 수 있습니다(저장소를 받은 뒤 `claude plugin validate mods/<mod 이름>`).
-
-```bash
-claude plugin install idea-bank-viewer@avocadosmasher
-claude plugin install gated-tdd-budget@avocadosmasher
-```
+Claude Code에서만 쓰는 선택 설치 mod는 [아래 절](#선택-설치-mod-claude-code-전용)에 따로 정리했습니다.
 
 </details>
 
@@ -72,6 +60,49 @@ skills/engineering/capture-compare → ~/.claude/skills/capture-compare
 Codex 등은 `~/.agents/skills/`에 같은 방식으로 복사합니다.
 
 </details>
+
+## 선택 설치: mod (Claude Code 전용)
+
+일부 스킬에는 Claude Code의 화면이나 동작을 돕는 mod가 따로 있습니다. 스킬은 mod 없이도 동작하고, mod는 있으면 더 편해지는 보조 장치입니다.
+
+mod는 설치한 세션에서 파일을 읽고 쓰는 등 스킬보다 넓은 권한으로 동작합니다. 그래서 `skill-storage`에 넣지 않고 마켓플레이스의 별도 플러그인으로 두었습니다. `skill-storage`를 설치해도 따라 들어가지 않으니 코드를 확인하고 원하는 것만 설치하세요. Codex와 skills.sh 설치에는 해당하지 않습니다.
+
+| mod | 하는 일 | 함께 쓰는 스킬 | 쓰는 권한 |
+| --- | --- | --- | --- |
+| [idea-bank-viewer](./mods/idea-bank-viewer/) | `/ideas`로 저장한 아이디어를 패널에서 훑어보고 검색한다 | `idea-banking` | 파일 읽기(아이디어 폴더), 환경 변수 읽기(`IDEA_BANK_PATH`, `HOME`, `USERPROFILE`). 파일 쓰기·프로세스 실행·네트워크는 쓰지 않는다 |
+| [gated-tdd-budget](./mods/gated-tdd-budget/) | `git commit` 직전에 컨텍스트 사용률과 사용 한도를 `.git/gated-tdd-budget.json`에 남겨, 예산 신호가 단위 수 대신 실제 수치로 판단하게 한다 | `gated-tdd` | 세션 사용량 읽기, 파일 읽기(작업 폴더에서 위로 `.git` 찾기), 파일 쓰기(`.git/gated-tdd-budget.json` 하나). 프로세스 실행·네트워크·환경 변수는 쓰지 않는다 |
+
+### 설치
+
+1. 마켓플레이스를 추가합니다. 위 "설치"에서 이미 했다면 건너뜁니다.
+   ```bash
+   claude plugin marketplace add avocadosmasher/skill-storage
+   ```
+2. 원하는 mod만 설치합니다. 세션 안에서는 `/plugin install <mod 이름>@avocadosmasher`.
+   ```bash
+   claude plugin install idea-bank-viewer@avocadosmasher
+   claude plugin install gated-tdd-budget@avocadosmasher
+   ```
+3. Claude Code를 다시 시작합니다. 세션을 유지하려면 `/reload-plugins`를 실행합니다.
+4. 동작을 확인합니다.
+   - `idea-bank-viewer`: `/ideas`를 입력하면 아이디어 패널이 열립니다.
+   - `gated-tdd-budget`: `gated-tdd`를 도입한 저장소에서 커밋한 뒤 `node scripts/budget.mjs status`를 실행하면 `(어댑터)`가 보입니다.
+
+설치하기 전에 mod가 실제로 부르는 기능을 직접 확인할 수 있습니다. 저장소를 받은 뒤 `claude plugin validate mods/<mod 이름>`을 실행하면 위 표의 권한과 같은 호출 목록이 나옵니다.
+
+### 업데이트와 제거
+
+```bash
+claude plugin marketplace update avocadosmasher        # 새 버전 목록 받기
+claude plugin update <mod 이름>@avocadosmasher          # 받은 뒤 다시 시작해야 반영됨
+claude plugin uninstall <mod 이름>@avocadosmasher       # 제거
+```
+
+### 동작하지 않을 때
+
+- 설치나 업데이트 뒤 다시 시작했는지 확인합니다.
+- Claude Code 버전에 따라 mod(함수 훅)를 켜려면 환경 변수 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`이 필요할 수 있습니다.
+- mod마다 자세한 사용법과 한계는 함께 쓰는 스킬의 설명 페이지에 있습니다: [idea-banking](./docs/productivity/idea-banking.md), [gated-tdd](./docs/engineering/gated-tdd.md).
 
 ## 왜 이 스킬들이 있나
 
