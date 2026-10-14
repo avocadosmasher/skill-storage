@@ -1,3 +1,3 @@
 interface:
   display_name: "Gated TDD"
-  short_description: "테스트 먼저, 사용자 '통과' 후 커밋"
+  short_description: "테스트 먼저, 결정과 확인만 사용자 판정"

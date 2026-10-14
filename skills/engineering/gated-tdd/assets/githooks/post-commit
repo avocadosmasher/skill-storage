@@ -1,0 +1,3 @@
+#!/bin/sh
+# 커밋 직후 예산 신호. 임계치를 넘었을 때만 한 줄을 출력하고, 커밋을 막지 않는다.
+node scripts/budget.mjs check || true

@@ -56,3 +56,11 @@
 ## 설계 결정
 
 구조에 관한 결정은 `.agents/adr/`에 번호를 붙여 남긴다. 이슈와 제안을 받는 기준은 [SCOPE.md](./SCOPE.md), 거절한 아이디어는 `.out-of-scope/`에 주제별 파일로 남긴다.
+
+## 스킬 설계 기록
+
+스킬 하나의 동작 설계는 `.agents/design/<스킬>/`에 남긴다([ADR 0003](./.agents/adr/0003-skill-design-records.md)). 형식은 [.agents/design/README.md](./.agents/design/README.md)를 따른다.
+
+- 스킬을 고치기 전에 `.agents/design/<스킬>/README.md`가 있으면 먼저 읽는다. 바꾸려는 부분과 관련된 결정 파일만 연다.
+- 바꾸려는 내용이 현재 원칙이나 채택된 결정과 부딪히면, 고치기 전에 사용자에게 그 결정과 충돌한다고 알린다.
+- 선택지가 있었던 결정이나 방향을 바꾼 결정은 그 대화에서 바로 결정 파일로 남기고, 그 스킬의 `README.md` 결정 목록과 현재 원칙을 같은 변경에서 고친다.
