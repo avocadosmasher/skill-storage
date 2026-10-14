@@ -80,5 +80,5 @@
 { "at": "2026-10-14T12:00:00Z", "context": 68, "limits": [{ "name": "5시간 한도", "percent": 41 }] }
 ```
 
-- Claude Code: mod가 `$.session.usage()`로 컨텍스트와 사용 한도를 읽을 수 있다. `git commit`을 실행하는 Bash 호출 직전에 파일을 쓰는 방식이 맞다.
+- Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash 호출 직전에 이 파일을 쓴다. 사용자에게 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
 - 사용량을 알 방법이 없는 도구(현재 Codex 훅 입력에는 사용량 필드가 없음)는 대리 지표만 쓴다.

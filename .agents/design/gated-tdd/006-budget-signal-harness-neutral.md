@@ -2,7 +2,7 @@
 
 - 날짜: 2026-10-14
 - 상태: 채택
-- 반영: skill-storage 1.5.0 (어댑터는 후속)
+- 반영: skill-storage 1.5.0 (Claude Code 어댑터는 [007](./007-claude-code-budget-adapter.md))
 
 ## 배경
 
