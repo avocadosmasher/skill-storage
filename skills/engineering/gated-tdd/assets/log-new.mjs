@@ -14,15 +14,24 @@ function arg(name) {
 }
 
 const title = process.argv[2];
+const USAGE = '사용법: node scripts/log-new.mjs "<제목>" [--gate 결정|확인|자동] [--id D09] [--summary "결론 한 줄"] [--status 기록]';
 if (!title || title.startsWith('--')) {
-  console.error('사용법: node scripts/log-new.mjs "<제목>" [--id D09] [--summary "결론 한 줄"] [--status 기록]');
+  console.error(USAGE);
+  process.exit(1);
+}
+
+// 게이트 등급마다 기본 상태가 다르다. 자동 단위는 판정을 기다리지 않는다.
+const GATE_STATUS = { 결정: '판정 대기', 확인: '확인 대기', 자동: '자동 진행' };
+const gate = arg('gate');
+if (gate !== undefined && !(gate in GATE_STATUS)) {
+  console.error(`--gate는 결정, 확인, 자동 중 하나입니다.\n${USAGE}`);
   process.exit(1);
 }
 
 // 제목 "<ID>: <제목>"에서 ID를 잘라 낸다. ID 뒤에 em-dash나 하이픈을 쓴 예전 형식도 읽는다.
 const id = arg('id') ?? title.split(/:\s+|\s+\u2014\s+|\s+-\s+/)[0];
 const summary = arg('summary') ?? '(결론 한 줄을 채운다: 무엇이 문제였고 어떻게 정했는지)';
-const status = arg('status') ?? '판정 대기';
+const status = arg('status') ?? GATE_STATUS[gate] ?? '판정 대기';
 const today = new Date().toISOString().slice(0, 10);
 
 const seq = readdirSync(LOG_DIR)
@@ -41,7 +50,8 @@ if (existsSync(path)) {
 
 writeFileSync(path, `# ${title} (${today}, ${status})
 
-- 시작 기준: 
+- 게이트: ${gate ?? ''} (사유: )
+- 시작 기준:
 - 문제·요청: 
 - Red: 
 - 수정: 
