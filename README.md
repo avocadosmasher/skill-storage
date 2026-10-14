@@ -25,11 +25,13 @@ claude plugin install skill-storage@avocadosmasher
 | mod | 하는 일 | 함께 쓰는 스킬 | 쓰는 권한 |
 | --- | --- | --- | --- |
 | [idea-bank-viewer](./mods/idea-bank-viewer/) | `/ideas`로 저장한 아이디어를 패널에서 훑어보고 검색한다 | `idea-banking` | 파일 읽기(아이디어 폴더), 환경 변수 읽기(`IDEA_BANK_PATH`, `HOME`, `USERPROFILE`). 파일 쓰기·프로세스 실행·네트워크는 쓰지 않는다 |
+| [gated-tdd-budget](./mods/gated-tdd-budget/) | `git commit` 직전에 컨텍스트 사용률과 사용 한도를 `.git/gated-tdd-budget.json`에 남겨, 예산 신호가 단위 수 대신 실제 수치로 판단하게 한다 | `gated-tdd` | 세션 사용량 읽기, 파일 읽기(작업 폴더에서 위로 `.git` 찾기), 파일 쓰기(`.git/gated-tdd-budget.json` 하나). 프로세스 실행·네트워크·환경 변수는 쓰지 않는다 |
 
 설치 전에 `claude plugin validate`로 mod가 실제로 부르는 기능을 직접 확인할 수 있습니다(저장소를 받은 뒤 `claude plugin validate mods/<mod 이름>`).
 
 ```bash
 claude plugin install idea-bank-viewer@avocadosmasher
+claude plugin install gated-tdd-budget@avocadosmasher
 ```
 
 </details>

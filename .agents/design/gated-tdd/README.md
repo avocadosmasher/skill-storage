@@ -17,12 +17,13 @@
 4. 단위마다 커밋한다. 사용자의 최종 선택은 main 병합(PR)이다([003](./003-commit-before-approval.md)).
 5. 확인 지점은 사용자가 직접 해볼 수 있는 기능 묶음이 완성되는 곳에 둔다. 고정 개수로 정하지 않는다([004](./004-checkpoints-at-feature-bundles.md)).
 6. 확인 지점은 확인받기 전에는 넘어가지 않는다. 세션이 바뀌어도 확인부터 한다([005](./005-unconfirmed-checkpoints-block.md)).
-7. 컨텍스트와 사용 한도는 단위 경계에서만 보고, 임계치를 넘었을 때만 알린다. 특정 에이전트 도구에 묶지 않는다([006](./006-budget-signal-harness-neutral.md)).
+7. 컨텍스트와 사용 한도는 단위 경계에서만 보고, 임계치를 넘었을 때만 알린다. 특정 에이전트 도구에 묶지 않고, 정확한 수치는 도구별 어댑터가 공급한다([006](./006-budget-signal-harness-neutral.md), [007](./007-claude-code-budget-adapter.md)).
 
 ## 결정 목록
 
 | 번호 | 날짜 | 결정 | 상태 |
 | --- | --- | --- | --- |
+| [007](./007-claude-code-budget-adapter.md) | 2026-10-14 | Claude Code 예산 어댑터는 git commit 직전에 파일을 쓰는 선택 설치 mod. 명령은 바꾸지 않음 | 채택 |
 | [006](./006-budget-signal-harness-neutral.md) | 2026-10-14 | 예산 신호는 커밋 직후 git 훅이 임계치를 넘을 때만 알린다. 수치 공급은 도구별 어댑터로 분리 | 채택 |
 | [005](./005-unconfirmed-checkpoints-block.md) | 2026-10-14 | 확인 안 된 확인 지점은 넘어가지 않고 다음 세션도 확인부터 시작 | 채택 |
 | [004](./004-checkpoints-at-feature-bundles.md) | 2026-10-14 | 확인 지점은 해볼 수 있는 기능 묶음 단위. 묶기 제안은 하지 않음 | 채택 |

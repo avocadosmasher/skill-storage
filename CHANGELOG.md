@@ -1,5 +1,9 @@
 # skill-storage
 
+## gated-tdd-budget 0.1.0
+
+- 마켓플레이스에 선택 설치용 mod `gated-tdd-budget`을 별도 플러그인으로 추가했습니다. `gated-tdd`의 예산 신호에 쓰이는 Claude Code 어댑터입니다. 에이전트가 `git commit`을 실행하기 직전에 세션의 컨텍스트 사용률과 사용 한도를 `.git/gated-tdd-budget.json`에 남겨, `budget.mjs`가 단위 수 대신 실제 수치로 판단하게 합니다. 커밋 명령은 바꾸지 않고, 실패해도 커밋을 막지 않습니다. `claude plugin install gated-tdd-budget@avocadosmasher`로 직접 설치해야 합니다.
+
 ## 1.5.0
 
 - `gated-tdd`의 승인 경계를 다시 정했습니다. 단위마다 판정받던 방식이 승인 피로와 도장 찍기를 만들어, 사용자는 두 가지만 판정합니다: AI가 대신 정할 수 없는 **결정**(판정 질문 ①선택 ②합의 변경 ③되돌리기 어려움)과, 직접 해볼 수 있는 기능 묶음의 **확인**. 나머지는 기록과 함께 자동으로 진행하고 다음 정지 보고 맨 위에 모아 알립니다.
