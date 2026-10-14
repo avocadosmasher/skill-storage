@@ -11,7 +11,8 @@
 - **동작 변경**: 승인 전에도 단위마다 커밋합니다. `manual-review.mjs`는 보호 대상 변경(보호 경로, 기존 테스트의 줄 변경·삭제·skip, 게이트 파일)만 판정 기록을 요구하고, `pre-push`는 main·master로의 push를 막아 PR로만 병합하게 합니다. 보호 대상은 `.gated-tdd.json`으로 저장소에 맞춥니다. 기존 저장소는 스크립트와 훅을 다시 복사해야 합니다.
 - 예산 신호를 더했습니다: `budget.mjs`와 `post-commit` 훅이 커밋 직후 컨텍스트·사용 한도·세션 단위 수가 임계치를 넘었을 때만 한 줄을 출력합니다. 셸로 `git commit`을 실행하는 에이전트면 도구와 무관하게 동작하고, 정확한 수치는 도구별 어댑터 파일(`.git/gated-tdd-budget.json`)로 받습니다.
 - `log-new.mjs`에 `--gate 결정|확인|자동`을 더했습니다. 보고 형식 상세와 게이트 설명은 `references/`로 옮겨 `SKILL.md`를 줄였습니다(자동 압축 뒤 다시 들어가는 스킬 본문 상한을 고려).
-- 스킬 설계 기록을 `.agents/design/<스킬>/`에 남기기 시작했습니다([ADR 0003](./.agents/adr/0003-skill-design-records.md)). 이번 개편의 결정 여섯 개가 [`.agents/design/gated-tdd/`](./.agents/design/gated-tdd/README.md)에 있습니다.
+- `gated-tdd` 보고 규칙을 다시 썼습니다. "두괄식·개조식" 라벨만 있던 지시를 확인 가능한 규칙으로 바꿨습니다: 결론만 잘라 읽어도 판정할 수 있는 1~3개 bullet, 명사형 종결(시제·확신도를 구분하는 변환표, 판정 요청·질문 예외, 운영가이드·최종 보고서 본문은 제외). 보고는 마지막 보고 이후 대화를 보지 않은 사용자가 읽는다고 가정하고, 결정 보고에 "내가 이해한 전제"(확인됨/추정)와 계획 대비 위치를 더해 AI가 넘겨짚은 가정을 드러냅니다. 우선순위는 판단 재료 > 짧음 > 중복 금지입니다.
+- 스킬 설계 기록을 `.agents/design/<스킬>/`에 남기기 시작했습니다([ADR 0003](./.agents/adr/0003-skill-design-records.md)). 이번 개편의 결정들이 [`.agents/design/gated-tdd/`](./.agents/design/gated-tdd/README.md)에 있습니다.
 
 ## idea-bank-viewer 0.2.1
 
