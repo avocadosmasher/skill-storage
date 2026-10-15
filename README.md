@@ -143,6 +143,7 @@ claude plugin uninstall <mod 이름>@avocadosmasher       # 제거
 - **[grill-me-plus](./skills/productivity/grill-me-plus/SKILL.md)**: 계획이나 설계를 위험한 결정부터 집요하게 캐물어 공통 이해에 이르고, 정한 결정을 `DECISIONS.md`에 바로바로 기록한다. Matt Pocock의 `grill-me`를 바탕으로 했다([CREDITS](./skills/productivity/grill-me-plus/CREDITS.md)).
 - **[jasoseo-coach](./skills/productivity/jasoseo-coach/SKILL.md)**: 헤드헌터 관점으로 자기소개서를 함께 쓰고 검토한다. 재료 수집, JD 리서치, 초안, 글자수 관리, 검토 루프, 면접 예상 질문까지.
 - **[idea-banking](./skills/productivity/idea-banking/SKILL.md)**: 떠오른 도구·스킬·자동화·학습 아이디어를 원문 그대로 로컬 Markdown 파일에 바로 기록하고, 나중에 검색·비교·구체화한다. `/ideas` 패널 mod를 따로 설치할 수 있다.
+- **[thinking-aloud-writing](./skills/productivity/thinking-aloud-writing/SKILL.md)**: 공부 자료·Git 저장소·개발 기록·기존 초안으로 기술 블로그 글을 함께 기획하고 쓴다. 독자가 이해할 순서로 구성을 잡고, 빈틈은 인터뷰로 채우며, 질문을 던지고 답을 회수하는 설명과 친근한 구어체로 쓴다.
 
 ## 저장소 구조
 
