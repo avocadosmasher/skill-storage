@@ -1,5 +1,9 @@
 # skill-storage
 
+## 1.6.0
+
+- Productivity 분류에 `thinking-aloud-writing`을 추가했습니다 (model-invoked): 공부 자료·Git 저장소·개발 기록·기존 초안으로 기술 블로그 글을 함께 기획하고 씁니다. 자료를 읽고 독자가 이해할 순서로 구성을 제안하고, 집필을 바꾸는 빈틈만 인터뷰로 묻고, 공개 블로그 글 5편에서 뽑은 문체 프로필(`references/voice.md`)을 반영합니다. 제공되지 않은 경험·수치·출처는 만들지 않습니다.
+
 ## gated-tdd-budget 0.1.0
 
 - 마켓플레이스에 선택 설치용 mod `gated-tdd-budget`을 별도 플러그인으로 추가했습니다. `gated-tdd`의 예산 신호에 쓰이는 Claude Code 어댑터입니다. 에이전트가 `git commit`을 실행하기 직전에 세션의 컨텍스트 사용률과 사용 한도를 `.git/gated-tdd-budget.json`에 남겨, `budget.mjs`가 단위 수 대신 실제 수치로 판단하게 합니다. 커밋 명령은 바꾸지 않고, 실패해도 커밋을 막지 않습니다. `claude plugin install gated-tdd-budget@avocadosmasher`로 직접 설치해야 합니다.
