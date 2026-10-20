@@ -17,11 +17,12 @@
 
 ## 설치
 
-1. 위 표대로 복사하고 훅에 실행 권한을 준다(`chmod +x .githooks/*`).
-2. `git config core.hooksPath .githooks`. 기존 훅 경로가 있으면 통합한다.
+1. 위 표대로 복사하고 훅에 실행 권한을 준다(`chmod +x .githooks/*`, Windows에서는 `git update-index --chmod=+x .githooks/*`를 스테이징 후 실행).
+2. `git config core.hooksPath .githooks`. 기존 훅 경로가 있으면 통합한다. 이 설정은 clone마다 해야 하므로 `AGENTS.md`의 채택 선언에 적는다.
 3. `.gated-tdd.json`을 저장소에 맞게 만든다(아래). 사용자가 확정한다.
 4. `node --test scripts/manual-review.test.mjs scripts/budget.test.mjs`로 확인한다.
 5. 도입 커밋은 게이트 파일 자체가 보호 대상이므로 사용자 판정 후 `approve --for 도입`으로 커밋한다.
+   판정 기록은 스테이징된 트리에 대한 것이므로 `git add` 다음에 `approve`를 실행한다.
 
 ## 무엇을 막나
 
@@ -30,6 +31,11 @@
   - 보호 경로: `decide`에 맞는 파일
   - 테스트 파일(`tests`에 맞음)의 기존 줄 변경·삭제, 파일 삭제, skip·only 추가. 새 테스트를 덧붙이는 것은 자유다.
 - `pre-push`: `protectedBranches`로 가는 push와 그 브랜치 삭제. 작업 브랜치 push는 자유다.
+  예외: 올리는 커밋이 모두 `directPush` 경로만 바꾸는 fast-forward면 통과한다. 게이트 파일, 병합 커밋, 새 브랜치,
+  강제 push는 경로와 무관하게 막는다.
+
+계획 작업 표의 보호 대상 변경 칸에 적어 판정받은 변경은 그 계획 판정으로 `approve`한다(SKILL.md 3절 8단계).
+훅은 칸의 범위를 검사하지 않는다. 범위 대조는 에이전트가 하고, 애매하면 결정으로 올린다.
 
 판정 기록은 `.git/manual-review.json`(마지막 판정)과 `.git/manual-review.log`(이력)에 남고 버전 관리하지 않는다.
 훅은 대화를 읽지 못하므로 실제 사용자 판정 확인은 에이전트의 책임이다. 미스테이징·미추적 변경은 검사하지 않는다.
@@ -49,6 +55,7 @@
   ],
   "tests": ["*.test.*", "*.spec.*", "test_*.py", "*_test.py", "*_test.go", "**/__tests__/**", "**/tests/**", "**/test/**"],
   "protectedBranches": ["main", "master"],
+  "directPush": [],
   "budget": {
     "units": { "small": 6, "stop": 10 },
     "context": { "small": 60, "stop": 75 },
@@ -59,6 +66,11 @@
 ```
 
 인증·권한처럼 저장소마다 위치가 다른 보호 대상은 `decide`에 직접 더한다(예: `"src/auth/**"`).
+그 코드가 아직 없으면 그 영역을 처음 만드는 기능의 계획에서 더한다. `.gated-tdd.json` 변경을 그 행의 보호 대상 변경 칸에
+적어 계획 보고에서 판정받는다(초기 개발은 골격의 "게이트 설정" 행).
+
+`directPush`는 개발 절차 밖에서 main으로 바로 올리던 경로다(예: 블로그 글 `"content/posts/**"`). 기본은 비어 있다.
+코드처럼 실행되거나 빌드에 영향을 주는 파일(MDX, 설정, 스크립트)은 넣지 않는다. 넣어야 하면 그 위험을 도입 보고에 쓴다.
 
 ## 예산 신호
 
@@ -80,5 +92,5 @@
 { "at": "2026-10-14T12:00:00Z", "context": 68, "limits": [{ "name": "5시간 한도", "percent": 41 }] }
 ```
 
-- Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash 호출 직전에 이 파일을 쓴다. 사용자에게 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
+- Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash 호출 직전에 이 파일을 쓴다. 사용자에게 마켓플레이스 추가(`claude plugin marketplace add avocadosmasher/skill-storage`, 이미 했으면 생략)와 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
 - 사용량을 알 방법이 없는 도구(현재 Codex 훅 입력에는 사용량 필드가 없음)는 대리 지표만 쓴다.

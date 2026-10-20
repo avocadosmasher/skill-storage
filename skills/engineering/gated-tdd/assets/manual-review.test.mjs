@@ -146,3 +146,48 @@ test('push to feature branches passes; protected branches and their deletion are
   r.expect('check-push', 1, r.push('main', '0'.repeat(40)));
   r.expect('check-push', 0, r.push('feat/old', '0'.repeat(40)));
 });
+
+test('directPush allows fast-forward pushes that only touch those paths', t => {
+  const r = repo(t, { withGate: false });
+  r.write('.gated-tdd.json', JSON.stringify({ directPush: ['content/posts/**'] }));
+  r.git('add', '.');
+  r.commit();
+  const base = r.git('rev-parse', 'HEAD');
+  const update = (oid = r.git('rev-parse', 'HEAD'), remoteOid = base) =>
+    `refs/heads/main ${oid} refs/heads/main ${remoteOid}\n`;
+
+  r.write('content/posts/첫-글.md', '# 첫 글\n');
+  r.git('add', '.');
+  r.commit();
+  r.expect('check-push', 0, update());
+
+  r.write('src/app.js', 'export const a = 2;\n');
+  r.git('add', '.');
+  r.commit();
+  assert.match(r.expect('check-push', 1, update()).stderr, /outside directPush: src\/app\.js/);
+});
+
+test('directPush still blocks gate files, new branches, deletion, and non-fast-forward', t => {
+  const r = repo(t, { withGate: false });
+  r.write('.gated-tdd.json', JSON.stringify({ directPush: ['content/**', '.gated-tdd.json'] }));
+  r.git('add', '.');
+  r.commit();
+  const base = r.git('rev-parse', 'HEAD');
+  const update = (oid, remoteOid) => `refs/heads/main ${oid} refs/heads/main ${remoteOid}\n`;
+
+  r.write('.gated-tdd.json', JSON.stringify({ directPush: ['**'] }));
+  r.git('add', '.');
+  r.commit();
+  assert.match(r.expect('check-push', 1, update(r.git('rev-parse', 'HEAD'), base)).stderr, /\.gated-tdd\.json/);
+
+  r.expect('check-push', 1, update(base, '0'.repeat(40)));
+  r.expect('check-push', 1, update('0'.repeat(40), base));
+
+  r.git('checkout', '-q', base);
+  r.write('content/a.md', 'a\n');
+  r.git('add', '.');
+  r.commit();
+  const diverged = r.git('rev-parse', 'HEAD');
+  r.git('checkout', '-q', 'feat/work');
+  assert.match(r.expect('check-push', 1, update(diverged, r.git('rev-parse', 'HEAD'))).stderr, /fast-forward/);
+});

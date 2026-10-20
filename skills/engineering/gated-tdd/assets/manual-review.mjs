@@ -5,6 +5,7 @@
 //   guarded               스테이징된 변경 중 보호 대상과 그 이유를 보여 준다
 //   check-commit          pre-commit: 보호 대상 변경이 있으면 승인 기록과 대조한다
 //   check-push            pre-push: 보호 브랜치로 가는 push와 그 삭제를 막는다
+//                         (directPush 경로만 바꾸는 fast-forward push는 통과)
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -23,6 +24,8 @@ const DEFAULTS = {
   ],
   tests: ['*.test.*', '*.spec.*', 'test_*.py', '*_test.py', '*_test.go', '**/__tests__/**', '**/tests/**', '**/test/**'],
   protectedBranches: ['main', 'master'],
+  // 블로그 글처럼 개발 절차 밖에서 main으로 바로 올리던 경로. 기본은 없음.
+  directPush: [],
 };
 const SKIP_PATTERN = /\b(?:it|test|describe|context)\.(?:skip|only|todo)\b|\b(?:xit|xdescribe|fit|fdescribe)\s*\(|@pytest\.mark\.(?:skip|xfail)|\bt\.Skip(?:Now)?\(|@Disabled\b|@Ignore\b|\bskip\s*:\s*true\b/;
 
@@ -56,6 +59,21 @@ const head = () => {
     return null;
   }
 };
+
+// 보호 브랜치로 가는 push가 directPush 경로만 바꾸는 fast-forward인지. 아니면 막을 이유를 돌려준다.
+function directPushBlocker(config, localOid, remoteOid) {
+  const zero = /^0+$/;
+  if (!config.directPush.length) return 'no directPush paths';
+  if (zero.test(localOid)) return 'branch deletion';
+  if (zero.test(remoteOid)) return 'new branch';
+  try { git('cat-file', '-e', `${remoteOid}^{commit}`); } catch { return 'remote commit not fetched'; }
+  try { git('merge-base', '--is-ancestor', remoteOid, localOid); } catch { return 'not a fast-forward'; }
+  const range = `${remoteOid}..${localOid}`;
+  if (git('rev-list', '--merges', range)) return 'merge commit';
+  const files = [...new Set(git('-c', 'core.quotePath=false', 'log', '--format=', '--name-only', range).split('\n').filter(Boolean))];
+  const outside = files.filter(path => matches(path, GATE_FILES) || !matches(path, config.directPush));
+  return outside.length ? `outside directPush: ${outside.join(', ')}` : null;
+}
 
 // 스테이징된 변경 중 사용자 판정이 필요한 것과 그 이유.
 function guardedChanges(config) {
@@ -113,10 +131,12 @@ try {
   } else if (mode === 'check-push') {
     const updates = readFileSync(0, 'utf8').trim();
     for (const line of updates ? updates.split('\n') : []) {
-      const [, , remoteRef] = line.trim().split(/\s+/);
+      const [, localOid, remoteRef, remoteOid] = line.trim().split(/\s+/);
       const branch = remoteRef.replace(/^refs\/heads\//, '');
-      if (config.protectedBranches.includes(branch)) {
-        fail(`Push to protected branch "${branch}" is blocked. Open a PR and let the user merge it.`);
+      if (!config.protectedBranches.includes(branch)) continue;
+      const blocker = directPushBlocker(config, localOid, remoteOid);
+      if (blocker) {
+        fail(`Push to protected branch "${branch}" is blocked (${blocker}). Open a PR and let the user merge it.`);
       }
     }
   } else {
