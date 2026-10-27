@@ -191,3 +191,46 @@ test('directPush still blocks gate files, new branches, deletion, and non-fast-f
   r.git('checkout', '-q', 'feat/work');
   assert.match(r.expect('check-push', 1, update(diverged, r.git('rev-parse', 'HEAD'))).stderr, /fast-forward/);
 });
+
+test('non-ASCII paths are checked by their real names, even with core.quotePath on', t => {
+  const r = repo(t, { withGate: false });
+  r.git('config', 'core.quotePath', 'true');
+  r.write('가입.test.js', "test('a', () => {});\n");
+  r.git('add', '.');
+  r.expect('check-commit', 0); // 새 테스트는 자유
+  r.commit();
+  r.write('가입.test.js', "test('a changed', () => {});\n");
+  r.git('add', '.');
+  assert.match(r.expect('check-commit', 1).stderr, /가입\.test\.js: 기존 테스트의 줄 변경·삭제/);
+  r.git('reset', '-q', '--hard');
+  r.write('설정/서버.pem', 'secret\n');
+  r.git('add', '.');
+  assert.match(r.expect('check-commit', 1).stderr, /설정\/서버\.pem: 보호 경로/);
+});
+
+test('moving a test or protected file out of its pattern is still guarded', t => {
+  const r = repo(t, { withGate: false });
+  r.write('src/app.test.js', "test('a', () => {});\n");
+  r.write('db/migrations/001.sql', 'create table a();\n');
+  r.git('add', '.');
+  r.commit();
+  r.write('archive/.keep', '');
+  r.git('mv', 'src/app.test.js', 'archive/app.txt');
+  assert.match(r.expect('check-commit', 1).stderr, /src\/app\.test\.js -> archive\/app\.txt: 기존 테스트 이동·삭제/);
+  r.git('reset', '-q', '--hard');
+  r.write('db/old/.keep', '');
+  r.git('mv', 'db/migrations/001.sql', 'db/old/001.txt');
+  assert.match(r.expect('check-commit', 1).stderr, /001\.txt: 보호 경로/);
+});
+
+test('changing a binary snapshot next to a test is guarded; adding one is free', t => {
+  const r = repo(t, { withGate: false });
+  const png = (tail) => Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, ...tail]);
+  r.write('e2e/home.spec.ts-snapshots/home.png', png([1, 2, 3]));
+  r.git('add', '.');
+  r.expect('check-commit', 0);
+  r.commit();
+  r.write('e2e/home.spec.ts-snapshots/home.png', png([9, 9, 9]));
+  r.git('add', '.');
+  assert.match(r.expect('check-commit', 1).stderr, /home\.png: 기존 테스트의 바이너리 변경/);
+});

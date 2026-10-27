@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 // 작업 로그 항목을 하나 만든다: 항목 파일 생성 + 메뉴판(INDEX.md) 한 줄 추가 + STATUS.md 날짜 갱신.
 // 손으로 세 군데를 고치면 언젠가 어긋나므로 한 번에 처리한다.
+import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+
+// 하위 폴더에서 실행해도 저장소 루트 기준으로 쓴다.
+process.chdir(execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
 
 const LOG_DIR = 'docs/log';
 const INDEX = join(LOG_DIR, 'INDEX.md');
@@ -48,6 +52,23 @@ if (existsSync(path)) {
   process.exit(1);
 }
 
+// 세 파일을 고치기 전에 모두 확인한다. 중간에 실패해 항목 파일만 남으면 다시 실행할 때 번호가 어긋난다.
+// 표 구분선은 Prettier 등이 `|------|:---|`처럼 바꿔도 읽는다. 줄바꿈(CRLF/LF)은 원래 파일을 따른다.
+for (const required of [INDEX, STATUS]) {
+  if (!existsSync(required)) {
+    console.error(`${required}가 없습니다. 도입 때 만드는 파일입니다(SKILL.md 1절).`);
+    process.exit(1);
+  }
+}
+const indexText = readFileSync(INDEX, 'utf8');
+const eol = indexText.includes('\r\n') ? '\r\n' : '\n';
+const index = indexText.split(eol);
+const divider = index.findIndex(line => /^\|\s*:?-{3,}:?\s*\|/.test(line));
+if (divider === -1) {
+  console.error(`${INDEX}에서 표 머리 구분선(| --- |)을 찾지 못했습니다.`);
+  process.exit(1);
+}
+
 writeFileSync(path, `# ${title} (${today}, ${status})
 
 - 게이트: ${gate ?? ''} (사유: )
@@ -60,11 +81,8 @@ writeFileSync(path, `# ${title} (${today}, ${status})
 `, 'utf8');
 
 // 메뉴판은 최신이 위. 표 머리(구분선) 바로 다음 줄에 끼운다.
-const index = readFileSync(INDEX, 'utf8').split('\n');
-const divider = index.findIndex(line => /^\| --- \|/.test(line));
-if (divider === -1) throw new Error(`${INDEX}에서 표 머리를 찾지 못했습니다.`);
 index.splice(divider + 1, 0, `| ${id} | ${today} | ${summary} | ${status} | [${String(seq).padStart(2, '0')}](./${file}) |`);
-writeFileSync(INDEX, index.join('\n'), 'utf8');
+writeFileSync(INDEX, index.join(eol), 'utf8');
 
 const statusDoc = readFileSync(STATUS, 'utf8').replace(/^최종 갱신: .*$/m, `최종 갱신: ${today}`);
 writeFileSync(STATUS, statusDoc, 'utf8');

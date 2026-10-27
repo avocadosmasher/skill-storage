@@ -17,7 +17,13 @@
 
 ## 설치
 
-1. 위 표대로 복사하고 훅에 실행 권한을 준다(`chmod +x .githooks/*`, Windows에서는 `git update-index --chmod=+x .githooks/*`를 스테이징 후 실행).
+스크립트와 훅은 Node.js 18 이상으로 돈다. `node --version`으로 확인하고, 없거나 낮으면 도입 결정 보고에 쓴다.
+Node를 쓰지 않는 저장소도 커밋할 때마다 Node가 필요해진다.
+
+1. 위 표대로 복사하고, 훅 파일 세 개를 스테이징한 뒤 이름을 하나씩 적어 실행 권한을 준다.
+   `git update-index --chmod=+x .githooks/pre-commit .githooks/pre-push .githooks/post-commit`.
+   `*`를 쓰지 않는다. PowerShell은 git 명령의 `*`를 파일 이름으로 펼치지 않아 명령이 실패한다.
+   `git ls-files -s .githooks`의 세 줄이 모두 `100755`로 시작하는지 확인한다. 권한 없이 커밋되면 macOS·Linux에서 clone한 사람의 훅이 알림 없이 돌지 않는다.
 2. `git config core.hooksPath .githooks`. 기존 훅 경로가 있으면 통합한다. 이 설정은 clone마다 해야 하므로 `AGENTS.md`의 채택 선언에 적는다.
 3. `.gated-tdd.json`을 저장소에 맞게 만든다(아래). 사용자가 확정한다.
 4. `node --test scripts/manual-review.test.mjs scripts/budget.test.mjs`로 확인한다.
@@ -29,7 +35,8 @@
 - `pre-commit`: 스테이징된 변경이 아래에 해당하면, 그 트리에 대한 판정 기록(`approve`)이 있어야 커밋된다.
   - 게이트 파일: `scripts/manual-review.mjs`, `scripts/budget.mjs`, `.githooks/**`, `.gated-tdd.json` (설정과 무관하게 항상)
   - 보호 경로: `decide`에 맞는 파일
-  - 테스트 파일(`tests`에 맞음)의 기존 줄 변경·삭제, 파일 삭제, skip·only 추가. 새 테스트를 덧붙이는 것은 자유다.
+  - 테스트 파일(`tests`에 맞음)의 기존 줄 변경·삭제, 파일 삭제, skip·only 추가, 스냅숏 이미지 같은 바이너리 파일 변경. 새 테스트를 덧붙이는 것은 자유다.
+  - 이름 변경은 옛 경로와 새 경로를 모두 본다. 보호 경로나 테스트를 패턴 밖으로 옮기는 것도 보호 대상 변경이다.
 - `pre-push`: `protectedBranches`로 가는 push와 그 브랜치 삭제. 작업 브랜치 push는 자유다.
   예외: 올리는 커밋이 모두 `directPush` 경로만 바꾸는 fast-forward면 통과한다. 게이트 파일, 병합 커밋, 새 브랜치,
   강제 push는 경로와 무관하게 막는다.
@@ -53,7 +60,8 @@
     ".env*", "*.pem", "*.key",
     "Dockerfile*", "docker-compose*.yml", "docker-compose*.yaml", "*.tf", ".github/workflows/**"
   ],
-  "tests": ["*.test.*", "*.spec.*", "test_*.py", "*_test.py", "*_test.go", "**/__tests__/**", "**/tests/**", "**/test/**"],
+  "tests": ["*.test.*", "*.spec.*", "test_*.py", "*_test.py", "*_test.go", "**/__tests__/**", "**/tests/**", "**/test/**",
+    "**/__snapshots__/**", "**/*-snapshots/**"],
   "protectedBranches": ["main", "master"],
   "directPush": [],
   "budget": {
@@ -81,7 +89,7 @@
 | --- | --- | --- |
 | 컨텍스트 사용률 | 어댑터 | 60% 이상 작은 단위만, 75% 이상 정지 |
 | 사용 한도 사용률 | 어댑터 | 85% 이상 정지 |
-| 이번 세션 단위 수 | `budget.mjs start` 이후 커밋 수 | 컨텍스트 수치가 없을 때만 판단에 씀. 6개 이상 작은 단위만, 10개 이상 정지 |
+| 이번 세션 단위 수 | `budget.mjs start` 이후 이 작업 폴더에서 만든 커밋 수 (pull로 받은 커밋은 세지 않음) | 컨텍스트 수치가 없을 때만 판단에 씀. 6개 이상 작은 단위만, 10개 이상 정지 |
 
 ### 어댑터 계약
 
@@ -92,5 +100,5 @@
 { "at": "2026-10-14T12:00:00Z", "context": 68, "limits": [{ "name": "5시간 한도", "percent": 41 }] }
 ```
 
-- Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash 호출 직전에 이 파일을 쓴다. 사용자에게 마켓플레이스 추가(`claude plugin marketplace add avocadosmasher/skill-storage`, 이미 했으면 생략)와 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
+- Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash·PowerShell 호출 직전에 이 파일을 쓴다. 사용자에게 마켓플레이스 추가(`claude plugin marketplace add avocadosmasher/skill-storage`, 이미 했으면 생략)와 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
 - 사용량을 알 방법이 없는 도구(현재 Codex 훅 입력에는 사용량 필드가 없음)는 대리 지표만 쓴다.

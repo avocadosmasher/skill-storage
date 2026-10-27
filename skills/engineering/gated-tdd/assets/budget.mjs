@@ -2,12 +2,14 @@
 // 임계치를 넘었을 때만 한 줄을 출력한다. 에이전트는 git commit 출력에서 이 줄을 읽는다.
 //
 //   start   세션 시작: 기준 커밋과 시각을 .git/gated-tdd-session.json에 남긴다
-//   check   post-commit 훅: 임계치를 넘었을 때만 "[예산] ..." 출력. 항상 0으로 끝난다
+//   check   post-commit 훅: 방금 만든 커밋을 세션 기록에 더하고, 임계치를 넘었을 때만 "[예산] ..." 출력.
+//           항상 0으로 끝난다
 //   status  지금 수치와 판단을 항상 출력한다
 //
 // 정확한 수치는 도구별 어댑터가 .git/gated-tdd-budget.json에 쓴다:
 //   { "at": "<ISO 시각>", "context": 68, "limits": [{ "name": "5시간 한도", "percent": 41 }] }
-// 어댑터가 없거나 오래되었으면 대리 지표(세션 시작 이후 커밋 수)를 쓴다.
+// 어댑터가 없거나 오래되었으면 대리 지표(세션 시작 이후 이 작업 폴더에서 만든 커밋 수)를 쓴다.
+// pull이나 브랜치 전환으로 들어온 커밋은 post-commit 훅을 거치지 않으므로 세지 않는다.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -77,7 +79,7 @@ function main() {
   const root = git('rev-parse', '--show-toplevel');
   const sessionPath = git('rev-parse', '--git-path', 'gated-tdd-session.json');
   if (mode === 'start') {
-    writeFileSync(sessionPath, JSON.stringify({ base: headOrNull(), startedAt: new Date().toISOString() }) + '\n');
+    writeFileSync(sessionPath, JSON.stringify({ base: headOrNull(), startedAt: new Date().toISOString(), commits: [] }) + '\n');
     console.log('예산: 세션 시작을 기록했습니다.');
     return;
   }
@@ -87,8 +89,17 @@ function main() {
     return;
   }
   const session = readJson(sessionPath);
+  if (mode === 'check' && Array.isArray(session?.commits)) {
+    const commit = headOrNull();
+    if (commit && !session.commits.includes(commit)) {
+      session.commits.push(commit);
+      writeFileSync(sessionPath, JSON.stringify(session) + '\n');
+    }
+  }
+  // 예전 형식의 세션 기록(commits 없음)은 기준 커밋 이후 커밋 수로 센다.
+  const units = !session ? null : Array.isArray(session.commits) ? session.commits.length : unitsSince(session.base);
   const adapter = readJson(git('rev-parse', '--git-path', 'gated-tdd-budget.json'));
-  const result = assess({ units: session ? unitsSince(session.base) : null, adapter, limits: config(root) });
+  const result = assess({ units, adapter, limits: config(root) });
   if (mode === 'status' || result.level > 0) console.log(result.line);
 }
 

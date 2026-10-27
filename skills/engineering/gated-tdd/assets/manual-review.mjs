@@ -1,14 +1,15 @@
 // 승인 게이트. 단위마다 커밋하되(설계 003), 보호 대상 변경만 사용자 판정 기록을 요구하고
 // 보호 브랜치(main 등)로의 push는 막아 PR로만 들어가게 한다.
 //
-//   approve [--for <ID>]  스테이징 트리와 기준 커밋을 판정 기록으로 남긴다 (사용자 "통과" 후에만)
+//   approve [--for <ID>]  스테이징 트리와 기준 커밋을 판정 기록으로 남긴다
+//                         (사용자 "통과" 후, 또는 판정받은 계획의 보호 대상 변경 칸 범위 안일 때만)
 //   guarded               스테이징된 변경 중 보호 대상과 그 이유를 보여 준다
 //   check-commit          pre-commit: 보호 대상 변경이 있으면 승인 기록과 대조한다
 //   check-push            pre-push: 보호 브랜치로 가는 push와 그 삭제를 막는다
 //                         (directPush 경로만 바꾸는 fast-forward push는 통과)
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { join, posix } from 'node:path';
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).replace(/\n$/, '');
 const fail = (message) => { throw new Error(message); };
@@ -22,7 +23,8 @@ const DEFAULTS = {
     '.env*', '*.pem', '*.key',
     'Dockerfile*', 'docker-compose*.yml', 'docker-compose*.yaml', '*.tf', '.github/workflows/**',
   ],
-  tests: ['*.test.*', '*.spec.*', 'test_*.py', '*_test.py', '*_test.go', '**/__tests__/**', '**/tests/**', '**/test/**'],
+  tests: ['*.test.*', '*.spec.*', 'test_*.py', '*_test.py', '*_test.go', '**/__tests__/**', '**/tests/**', '**/test/**',
+    '**/__snapshots__/**', '**/*-snapshots/**'],
   protectedBranches: ['main', 'master'],
   // 블로그 글처럼 개발 절차 밖에서 main으로 바로 올리던 경로. 기본은 없음.
   directPush: [],
@@ -42,7 +44,7 @@ function globToRegExp(glob) {
   return new RegExp(`^${out}$`);
 }
 // 슬래시가 없는 패턴은 .gitignore처럼 어느 폴더의 파일 이름에도 맞춘다.
-const matches = (path, globs) => globs.some(glob => globToRegExp(glob).test(glob.includes('/') ? path : basename(path)));
+const matches = (path, globs) => globs.some(glob => globToRegExp(glob).test(glob.includes('/') ? path : posix.basename(path)));
 
 function loadConfig(root) {
   const file = join(root, '.gated-tdd.json');
@@ -75,23 +77,41 @@ function directPushBlocker(config, localOid, remoteOid) {
   return outside.length ? `outside directPush: ${outside.join(', ')}` : null;
 }
 
+// `git diff -z --name-status` 출력을 [{ kind, paths }]로 나눈다. 이름 변경(R)과 복사(C)는 경로가 둘이다.
+// -z는 한글처럼 ASCII가 아닌 경로를 따옴표·8진수로 바꾸지 않는다(core.quotePath 설정과 무관).
+function parseNameStatus(text) {
+  const fields = text.split('\0');
+  const entries = [];
+  for (let i = 0; i < fields.length && fields[i];) {
+    const kind = fields[i][0];
+    const count = kind === 'R' || kind === 'C' ? 2 : 1;
+    entries.push({ kind, paths: fields.slice(i + 1, i + 1 + count) });
+    i += 1 + count;
+  }
+  return entries;
+}
+
 // 스테이징된 변경 중 사용자 판정이 필요한 것과 그 이유.
 function guardedChanges(config) {
   const reasons = [];
-  const lines = git('diff', '--cached', '--name-status', '-M').split('\n').filter(Boolean);
-  for (const line of lines) {
-    const [status, ...paths] = line.split('\t');
+  for (const { kind, paths } of parseNameStatus(git('diff', '--cached', '--name-status', '-M', '-z'))) {
     const path = paths.at(-1);
-    const kind = status[0];
-    const add = (why) => reasons.push(`${path}: ${why}`);
-    if (matches(path, GATE_FILES)) add('게이트 파일');
-    else if (matches(path, config.decide)) add('보호 경로');
-    if (!matches(path, config.tests)) continue;
+    const add = (why) => reasons.push(`${paths.join(' -> ')}: ${why}`);
+    // 이름 변경은 옛 경로도 본다. 보호 대상을 패턴 밖으로 옮기는 것도 보호 대상 변경이다.
+    if (paths.some(p => matches(p, GATE_FILES))) add('게이트 파일');
+    else if (paths.some(p => matches(p, config.decide))) add('보호 경로');
+    const wasTest = kind === 'R' && matches(paths[0], config.tests);
+    if (!matches(path, config.tests)) {
+      if (wasTest) add('기존 테스트 이동·삭제');
+      continue;
+    }
     if (kind === 'D') { add('기존 테스트 삭제'); continue; }
-    const diff = kind === 'A' ? '' : git('diff', '--cached', '-U0', '-M', '--', ...paths);
+    const isNew = kind === 'A' || (kind === 'R' && !wasTest) || kind === 'C';
+    const diff = isNew ? '' : git('-c', 'core.quotePath=false', 'diff', '--cached', '-U0', '-M', '--', ...paths);
+    if (/^Binary files /m.test(diff)) { add('기존 테스트의 바이너리 변경'); continue; }
     const removed = diff.split('\n').some(l => l.startsWith('-') && !l.startsWith('---'));
     if (removed) add('기존 테스트의 줄 변경·삭제');
-    const addedText = kind === 'A'
+    const addedText = isNew
       ? git('show', `:${path}`)
       : diff.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++')).join('\n');
     if (SKIP_PATTERN.test(addedText)) add('테스트 skip·only 추가');
@@ -145,7 +165,7 @@ try {
 } catch (error) {
   console.error(`Manual review gate blocked: ${error.message}`);
   if (process.argv[2] !== 'check-push') {
-    console.error('Report the decision with its options and trade-offs; wait for explicit user PASS before recording approval.');
+    console.error('Record approval only after an explicit user PASS, or when the staged change is within a guarded-change cell of an approved plan. Otherwise report the decision with its options and trade-offs.');
   }
   process.exitCode = 1;
 }
