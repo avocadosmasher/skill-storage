@@ -70,7 +70,7 @@ export function assess({ units, adapter, limits: cfg, now = Date.now() }) {
     }
   }
   const source = context === null ? '대리 지표: 단위 수' : '어댑터';
-  const action = ['계속', '작은 단위만 진행', 'STATUS.md 인계 후 정지 (새 세션 권장)'][level];
+  const action = ['계속', '작은 단위만 진행', '상태 파일 인계 후 정지 (새 세션 권장)'][level];
   return { level, line: `[예산] ${parts.join(', ') || '수치 없음'} (${source}) → ${action}` };
 }
 
@@ -84,7 +84,7 @@ function main() {
     return;
   }
   if (mode !== 'check' && mode !== 'status') {
-    console.error('사용법: node scripts/budget.mjs start|check|status');
+    console.error('사용법: node scripts/gated-tdd/budget.mjs start|check|status');
     process.exitCode = 1;
     return;
   }

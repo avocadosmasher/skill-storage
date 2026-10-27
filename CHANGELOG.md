@@ -1,5 +1,19 @@
 # skill-storage
 
+## 1.9.0
+
+`gated-tdd`가 다른 도구와 자리를 다투지 않고, 여러 브랜치를 동시에 진행해도 깨지지 않게 바꿨습니다([`.agents/design/gated-tdd/022`](./.agents/design/gated-tdd/022-coexistence-and-parallel-branches.md)).
+
+- **배치 변경**: 스크립트를 `scripts/gated-tdd/`에 모으고, 게이트 자체의 테스트는 더 복사하지 않습니다. 전에는 vitest·jest가 복사된 `*.test.mjs`까지 돌려 `npm test`가 실패했고, 프로젝트에 있던 `scripts/budget.mjs`를 덮어쓸 수 있었습니다.
+- **브랜치별 상태**: 저장소 맨 위 `STATUS.md` 대신 브랜치마다 `docs/status/<브랜치>.md`를 둡니다. 세션은 새 스크립트 `status.mjs`로 시작하고, 지금 브랜치의 상태와 다른 브랜치(원격에만 있는 것 포함)의 판정·확인 대기, 미뤄 둔 작업을 한 번에 봅니다. 로그 파일 이름은 순번 대신 `<날짜>-<ID>.md`이고, `docs/log/INDEX.md`는 `.gitattributes`의 `merge=union`으로 두 브랜치의 줄을 모두 남깁니다.
+- **훅 자리**: husky 같은 다른 훅 도구가 이미 git 훅을 쓰고 있으면 자리를 빼앗지 않고 그 도구의 훅 맨 앞에 게이트 호출을 이어 붙입니다. 새 `manual-review.mjs hooks`가 훅 네 개를 실제로 실행해 게이트가 불리는지 확인하고, 세션 시작마다 이것으로 확인합니다.
+- **main 병합**: `git merge origin/main`으로 main을 받을 때, 원격 main에 이미 들어간 보호 대상 변경은 다시 판정받지 않습니다. 충돌을 풀며 고친 파일, main이 바꾸지 않은 파일, 로컬 브랜치에서 온 변경은 그대로 검사합니다.
+- **훅 구멍 막기**: 충돌 없는 병합도 검사하도록 `pre-merge-commit` 훅을 더하고, `merge.ff false`로 fast-forward 병합을 끕니다(`pull.ff only`로 `git pull`은 지금처럼). rebase·cherry-pick·revert는 훅을 거치지 않아 금지했습니다. 훅은 마지막 커밋의 게이트로 검사해, 게이트를 고치다 만 채로 두어도 검사가 꺼지지 않습니다. 훅 파일이 Windows에서 CRLF로 풀려 깨지지 않게 `.gitattributes`에 `eol=lf`를 둡니다.
+- **작업 보류**: 급한 일로 하던 작업을 치울 때 이름 붙인 stash와 원격 `park/<ID>` 브랜치로 남기고, 상태 파일과 세션 시작 출력에서 지울 때까지 보여 줍니다.
+- 동작을 바꾸지 않는 리팩터링·의존성 작업은 요구 문서를 생략하고 계획부터 한다고 `requirements.md`까지 맞췄습니다.
+- `grill-me-plus`를 부를 때 결정을 그 스킬의 `DECISIONS.md`가 아니라 계획·요구·`docs/decision/`에 쓰게 하고, `capture-compare`의 시안 개수는 그 스킬을 따릅니다.
+- **이미 도입한 저장소**: 다음 세션에서 에이전트가 새 배치로 한 번 옮기자고 결정 보고를 합니다(`references/approval-gate.md`의 "예전 배치에서 옮기기"). `AGENTS.md` 채택 선언의 "새로 clone하면" 줄이 `git config core.hooksPath .githooks && git config merge.ff false && git config pull.ff only`로 바뀌고, main 반영 줄이 더해집니다. `CLAUDE.md` 첫 줄은 "세션을 시작하면 `node scripts/gated-tdd/status.mjs`부터 실행한다."입니다.
+
 ## 1.8.1
 
 `gated-tdd` 전체 점검에서 나온 버그를 고쳤습니다([`.agents/design/gated-tdd/021`](./.agents/design/gated-tdd/021-full-audit.md)). 이미 도입한 저장소는 `scripts/manual-review.mjs`, `scripts/budget.mjs`, `scripts/log-new.mjs`를 다시 복사해야 반영됩니다. 게이트 파일이므로 그 커밋은 판정을 받습니다.

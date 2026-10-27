@@ -86,7 +86,7 @@ mod는 설치한 세션에서 파일을 읽고 쓰는 등 스킬보다 넓은 �
 3. Claude Code를 다시 시작합니다. 세션을 유지하려면 `/reload-plugins`를 실행합니다.
 4. 동작을 확인합니다.
    - `idea-bank-viewer`: `/ideas`를 입력하면 아이디어 패널이 열립니다.
-   - `gated-tdd-budget`: `gated-tdd`를 도입한 저장소에서 커밋한 뒤 `node scripts/budget.mjs status`를 실행하면 `(어댑터)`가 보입니다.
+   - `gated-tdd-budget`: `gated-tdd`를 도입한 저장소에서 커밋한 뒤 `node scripts/gated-tdd/budget.mjs status`를 실행하면 `(어댑터)`가 보입니다.
 
 설치하기 전에 mod가 실제로 부르는 기능을 직접 확인할 수 있습니다. 저장소를 받은 뒤 `claude plugin validate mods/<mod 이름>`을 실행하면 위 표의 권한과 같은 호출 목록이 나옵니다.
 

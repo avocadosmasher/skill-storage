@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -26,7 +26,7 @@ function repo(t, { withGate = true } = {}) {
   const gatePath = join(cwd, '..', `${cwd.split(/[\\/]/).at(-1)}-gate.mjs`);
   writeFileSync(gatePath, code);
   t.after(() => rmSync(gatePath, { force: true }));
-  if (withGate) write('scripts/manual-review.mjs', code);
+  if (withGate) write('scripts/gated-tdd/manual-review.mjs', code);
   write('src/app.js', 'export const a = 1;\n');
   git('add', '.');
   const gate = (mode, input = '', extra = []) =>
@@ -233,4 +233,117 @@ test('changing a binary snapshot next to a test is guarded; adding one is free',
   r.write('e2e/home.spec.ts-snapshots/home.png', png([9, 9, 9]));
   r.git('add', '.');
   assert.match(r.expect('check-commit', 1).stderr, /home\.png: 기존 테스트의 바이너리 변경/);
+});
+
+// 원격 보호 브랜치를 흉내 낸다: 빈 원격 저장소를 만들고, main에 보호 대상 변경을 쌓아 올린다(PR로 병합된 것에 해당).
+function withMain(t, r) {
+  const origin = `${r.cwd}-origin.git`;
+  execFileSync('git', ['init', '-q', '--bare', origin]);
+  t.after(() => rmSync(origin, { recursive: true, force: true }));
+  r.git('remote', 'add', 'origin', origin);
+  r.write('src/app.test.js', "test('a', () => {});\n");
+  r.write('package.json', '{"v":1}\n');
+  r.git('add', '.');
+  r.commit('base');
+  r.git('branch', 'main');
+  r.git('switch', '-q', 'main');
+  r.write('package.json', '{"v":2}\n');
+  r.write('db/migrations/001.sql', 'create table a();\n');
+  r.write('src/app.test.js', "test('a changed on main', () => {});\n");
+  r.git('add', '.');
+  r.commit('approved on main');
+  r.git('push', '-q', 'origin', 'main');
+  r.git('switch', '-q', 'feat/work');
+  r.write('src/feature.js', 'export {};\n');
+  r.git('add', '.');
+  r.commit('feature');
+}
+
+test('merging the remote main brings in its approved changes without a new approval', t => {
+  const r = repo(t, { withGate: false });
+  withMain(t, r);
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'origin/main');
+  r.expect('check-commit', 0);
+});
+
+test('merging a local branch that is not on the remote main is still checked', t => {
+  const r = repo(t, { withGate: false });
+  withMain(t, r);
+  r.git('switch', '-q', 'main');
+  r.write('db/migrations/002.sql', 'drop table a;\n');
+  r.git('add', '.');
+  r.commit('not reviewed');
+  r.git('switch', '-q', 'feat/work');
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'main');
+  assert.match(r.expect('check-commit', 1).stderr, /002\.sql: 보호 경로/);
+});
+
+test('during a trusted merge, files the main side did not change or that were edited are still checked', t => {
+  const r = repo(t, { withGate: false });
+  withMain(t, r);
+  // 기능 브랜치에서 판정받아 바꾼 의존성을 병합하며 옛 내용으로 되돌린다. main은 이 파일을 바꾸지 않았다.
+  r.write('Dockerfile', 'FROM node:22\n');
+  r.git('add', '.');
+  r.commit('approved on feature');
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'origin/main');
+  r.git('rm', '-q', 'Dockerfile');
+  assert.match(r.expect('check-commit', 1).stderr, /Dockerfile: 보호 경로/);
+  r.git('reset', '-q', '--hard');
+  // main에서 들어온 마이그레이션을 병합하며 고친다.
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'origin/main');
+  r.write('db/migrations/001.sql', 'create table b();\n');
+  r.git('add', '.');
+  assert.match(r.expect('check-commit', 1).stderr, /001\.sql: 보호 경로/);
+});
+
+test('hooks reports whether each hook reaches the gate, also when chained from another tool', t => {
+  const r = repo(t, { withGate: false });
+  const hooks = ['pre-commit', 'pre-merge-commit', 'pre-push', 'post-commit'];
+  for (const hook of hooks) {
+    r.write(`.githooks/${hook}`, '');
+    copyFileSync(new URL(`./githooks/${hook}`, import.meta.url), join(r.cwd, '.githooks', hook));
+    chmodSync(join(r.cwd, '.githooks', hook), 0o755);
+  }
+  r.git('config', 'core.hooksPath', '.githooks');
+  assert.match(r.expect('hooks', 1).stdout, /merge\.ff: \(없음\) \(필요: false\)/);
+  r.git('config', 'merge.ff', 'false');
+  r.git('config', 'pull.ff', 'only');
+  assert.match(r.expect('hooks', 0).stdout, /pre-commit: 연결됨[\s\S]*post-commit: 연결됨/);
+
+  // 다른 훅 도구가 자리를 쓰는 경우: 그 도구의 훅 맨 앞에 게이트 호출 한 줄을 넣는다. 확인 중에는 뒤 명령이 돌지 않는다.
+  for (const hook of hooks) {
+    r.write(`.husky/${hook}`, `#!/bin/sh\n.githooks/${hook} "$@" || exit $?\necho ran > other-tool-${hook}.txt\n`);
+    chmodSync(join(r.cwd, '.husky', hook), 0o755);
+  }
+  r.git('config', 'core.hooksPath', '.husky');
+  r.expect('hooks', 0);
+  assert.ok(!existsSync(join(r.cwd, 'other-tool-pre-push.txt')));
+  r.write('.husky/pre-push', '#!/bin/sh\nnpm test\n');
+  assert.match(r.expect('hooks', 1).stdout, /pre-push: 연결 안 됨/);
+});
+
+test('through the real hooks, a clean merge of the remote main commits and a local unreviewed merge does not', t => {
+  const r = repo(t);
+  withMain(t, r);
+  for (const hook of ['pre-commit', 'pre-merge-commit', 'pre-push', 'post-commit']) {
+    r.write(`.githooks/${hook}`, '');
+    copyFileSync(new URL(`./githooks/${hook}`, import.meta.url), join(r.cwd, '.githooks', hook));
+    chmodSync(join(r.cwd, '.githooks', hook), 0o755);
+  }
+  r.git('add', '.');
+  r.commit('hooks');
+  r.git('config', 'core.hooksPath', '.githooks');
+  const merge = (ref) => spawnSync('git', ['merge', ref, '-m', `merge ${ref}`], { cwd: r.cwd, encoding: 'utf8' });
+  const clean = merge('origin/main');
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.equal(r.git('log', '-1', '--format=%s'), 'merge origin/main');
+
+  r.git('switch', '-q', 'main');
+  r.write('db/migrations/002.sql', 'drop table a;\n');
+  r.git('add', '.');
+  r.git('-c', 'core.hooksPath=', 'commit', '-qm', 'not reviewed');
+  r.git('switch', '-q', 'feat/work');
+  const local = merge('main');
+  assert.notEqual(local.status, 0);
+  assert.match(local.stderr, /002\.sql: 보호 경로/);
 });

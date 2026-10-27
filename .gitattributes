@@ -1,0 +1,2 @@
+# gated-tdd 훅은 sh로 돈다. Windows에서 CRLF로 풀리면 명령 끝에 CR 문자가 붙어 깨진다.
+skills/engineering/gated-tdd/assets/githooks/* text eol=lf

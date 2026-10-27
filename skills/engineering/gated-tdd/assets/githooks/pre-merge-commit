@@ -1,0 +1,11 @@
+#!/bin/sh
+# 충돌 없는 병합은 pre-commit을 거치지 않으므로 같은 검사를 여기서 한다.
+# 연결 확인(manual-review.mjs hooks)이면 표시만 남기고, 같은 훅에 이어진 다른 도구의 명령이 돌지 않게 멈춘다.
+if [ -n "$GATED_TDD_PROBE" ]; then echo "gated-tdd:pre-merge-commit"; exit 3; fi
+# 마지막 커밋에 있는 게이트로 검사한다. 작업 폴더에서 고치다 만 게이트가 검사를 끄지 못하게 한다.
+gate=scripts/gated-tdd/manual-review.mjs
+if git cat-file -e "HEAD:$gate" 2>/dev/null; then
+  copy=$(git rev-parse --git-path gated-tdd-gate.mjs)
+  git show "HEAD:$gate" > "$copy" && gate=$copy
+fi
+exec node "$gate" check-commit

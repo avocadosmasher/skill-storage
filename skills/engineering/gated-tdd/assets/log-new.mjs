@@ -1,16 +1,23 @@
 #!/usr/bin/env node
-// 작업 로그 항목을 하나 만든다: 항목 파일 생성 + 메뉴판(INDEX.md) 한 줄 추가 + STATUS.md 날짜 갱신.
+// 작업 로그 항목을 하나 만든다: 항목 파일 생성 + 메뉴판(INDEX.md) 한 줄 추가 + 이 브랜치 상태 파일 날짜 갱신.
 // 손으로 세 군데를 고치면 언젠가 어긋나므로 한 번에 처리한다.
+// 여러 브랜치가 동시에 진행해도 겹치지 않게, 항목 파일은 날짜와 ID로 이름 짓고 상태 파일은 브랜치마다 따로 둔다.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 // 하위 폴더에서 실행해도 저장소 루트 기준으로 쓴다.
-process.chdir(execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
+process.chdir(git('rev-parse', '--show-toplevel'));
 
 const LOG_DIR = 'docs/log';
 const INDEX = join(LOG_DIR, 'INDEX.md');
-const STATUS = 'STATUS.md';
+const branch = git('branch', '--show-current');
+if (!branch) {
+  console.error('브랜치가 아닌 곳(detached HEAD)에서는 기록하지 않습니다. 작업 브랜치로 옮긴 뒤 실행합니다.');
+  process.exit(1);
+}
+const STATUS = `docs/status/${branch.replace(/[\\/]/g, '-')}.md`;
 
 function arg(name) {
   const index = process.argv.indexOf(`--${name}`);
@@ -18,7 +25,7 @@ function arg(name) {
 }
 
 const title = process.argv[2];
-const USAGE = '사용법: node scripts/log-new.mjs "<제목>" [--gate 결정|확인|자동] [--id D09] [--summary "결론 한 줄"] [--status 기록]';
+const USAGE = '사용법: node scripts/gated-tdd/log-new.mjs "<제목>" [--gate 결정|확인|자동] [--id D09] [--summary "결론 한 줄"] [--status 기록]';
 if (!title || title.startsWith('--')) {
   console.error(USAGE);
   process.exit(1);
@@ -38,27 +45,19 @@ const summary = arg('summary') ?? '(결론 한 줄을 채운다: 무엇이 문�
 const status = arg('status') ?? GATE_STATUS[gate] ?? '판정 대기';
 const today = new Date().toISOString().slice(0, 10);
 
-const seq = readdirSync(LOG_DIR)
-  .map(name => Number.parseInt(name, 10))
-  .filter(Number.isInteger)
-  .reduce((max, value) => Math.max(max, value), 0) + 1;
-
 const slug = (arg('id') ?? title)
   .replace(/(:\s|\s+\u2014).*$/, '').replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·]/g, '').slice(0, 40) || 'entry';
-const file = `${String(seq).padStart(2, '0')}-${slug}.md`;
+// 순번 대신 날짜로 이름 짓는다. 순번은 두 브랜치가 같은 번호를 만들어 병합 때 부딪힌다.
+let stem = `${today}-${slug}`;
+for (let n = 2; existsSync(join(LOG_DIR, `${stem}.md`)); n += 1) stem = `${today}-${slug}-${n}`;
+const file = `${stem}.md`;
 const path = join(LOG_DIR, file);
-if (existsSync(path)) {
-  console.error(`이미 있는 파일입니다: ${path}`);
-  process.exit(1);
-}
 
-// 세 파일을 고치기 전에 모두 확인한다. 중간에 실패해 항목 파일만 남으면 다시 실행할 때 번호가 어긋난다.
+// 파일을 고치기 전에 모두 확인한다. 중간에 실패해 항목 파일만 남으면 다시 실행할 때 기록이 어긋난다.
 // 표 구분선은 Prettier 등이 `|------|:---|`처럼 바꿔도 읽는다. 줄바꿈(CRLF/LF)은 원래 파일을 따른다.
-for (const required of [INDEX, STATUS]) {
-  if (!existsSync(required)) {
-    console.error(`${required}가 없습니다. 도입 때 만드는 파일입니다(SKILL.md 1절).`);
-    process.exit(1);
-  }
+if (!existsSync(INDEX)) {
+  console.error(`${INDEX}가 없습니다. 도입 때 만드는 파일입니다(SKILL.md 1절).`);
+  process.exit(1);
 }
 const indexText = readFileSync(INDEX, 'utf8');
 const eol = indexText.includes('\r\n') ? '\r\n' : '\n';
@@ -81,12 +80,34 @@ writeFileSync(path, `# ${title} (${today}, ${status})
 `, 'utf8');
 
 // 메뉴판은 최신이 위. 표 머리(구분선) 바로 다음 줄에 끼운다.
-index.splice(divider + 1, 0, `| ${id} | ${today} | ${summary} | ${status} | [${String(seq).padStart(2, '0')}](./${file}) |`);
+index.splice(divider + 1, 0, `| ${id} | ${today} | ${summary} | ${status} | [${stem}](./${file}) |`);
 writeFileSync(INDEX, index.join(eol), 'utf8');
 
-const statusDoc = readFileSync(STATUS, 'utf8').replace(/^최종 갱신: .*$/m, `최종 갱신: ${today}`);
-writeFileSync(STATUS, statusDoc, 'utf8');
+// 이 브랜치의 상태 파일이 없으면(새 브랜치) 틀을 만든다. 칸은 에이전트가 채운다.
+if (existsSync(STATUS)) {
+  writeFileSync(STATUS, readFileSync(STATUS, 'utf8').replace(/^최종 갱신: .*$/m, `최종 갱신: ${today}`), 'utf8');
+} else {
+  mkdirSync(dirname(STATUS), { recursive: true });
+  writeFileSync(STATUS, `# 상태: ${branch}
+
+최종 갱신: ${today}
+
+## 지금
+
+- 마지막 커밋:
+- 판정 대기: 없음
+- 확인 대기: 없음
+- 다음 할 일:
+
+## 자동 진행 내역 (마지막 정지 보고 이후)
+
+## 최근 3건 (최신이 위)
+
+## 미뤄 둔 작업
+`, 'utf8');
+  console.log(`이 브랜치의 상태 파일을 만들었습니다: ${STATUS}`);
+}
 
 console.log(`만들었습니다: ${path}`);
 console.log(`메뉴판에 줄을 넣었습니다: ${INDEX}`);
-console.log('남은 일: 항목 파일을 채우고, 메뉴판의 결론 한 줄과 STATUS.md의 "지금"·"최근 3건"을 갱신한다.');
+console.log(`남은 일: 항목 파일을 채우고, 메뉴판의 결론 한 줄과 ${STATUS}의 "지금"·"최근 3건"을 갱신한다.`);
