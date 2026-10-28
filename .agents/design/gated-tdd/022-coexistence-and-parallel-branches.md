@@ -1,7 +1,7 @@
 # 022. 다른 도구와 자리를 다투지 않고, 브랜치를 동시에 진행해도 깨지지 않게 한다
 
 - 날짜: 2026-10-27
-- 상태: 채택
+- 상태: 채택 (로그 이름, `park/` 이름, 원칙 12·16의 예외는 [023](./023-second-audit.md)에서 바뀜)
 - 반영: skill-storage 1.9.0
 - 바뀐 것: [019](./019-third-simulation-fixes-and-backlog.md)의 "세션 시작에 `core.hooksPath`가 `.githooks`가 아니면 설정한다"는 실제 연결 확인으로 바뀜.
   세션 시작에 `STATUS.md`만 읽던 것은 상태 스크립트 출력만 보는 것으로 바뀜. [005](./005-unconfirmed-checkpoints-block.md)의 규칙(이 브랜치의 확인 대기가 막는다)은 그대로.

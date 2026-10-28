@@ -347,3 +347,66 @@ test('through the real hooks, a clean merge of the remote main commits and a loc
   assert.notEqual(local.status, 0);
   assert.match(local.stderr, /002\.sql: 보호 경로/);
 });
+
+test('an unstaged config edit cannot switch the gate off; the committed or staged config is used', t => {
+  const r = repo(t, { withGate: false });
+  r.commit();
+  r.write('.gated-tdd.json', JSON.stringify({ decide: [], protectedBranches: [] }));
+  r.write('package.json', '{"dependencies":{"x":"1"}}\n');
+  r.git('add', 'package.json');
+  assert.match(r.expect('check-commit', 1).stderr, /package\.json: 보호 경로/);
+  r.expect('check-push', 1, r.push('main'));
+  // 설정을 스테이징하면 그 변경 자체가 게이트 파일 변경이라 판정이 필요하다.
+  r.git('add', '.gated-tdd.json');
+  assert.match(r.expect('check-commit', 1).stderr, /\.gated-tdd\.json: 게이트 파일/);
+});
+
+test('hooks fails when a chained tool swallows the failure or does not pass the push input', t => {
+  const r = repo(t, { withGate: false });
+  const hooks = ['pre-commit', 'pre-merge-commit', 'pre-push', 'post-commit'];
+  for (const hook of hooks) {
+    r.write(`.githooks/${hook}`, '');
+    copyFileSync(new URL(`./githooks/${hook}`, import.meta.url), join(r.cwd, '.githooks', hook));
+    chmodSync(join(r.cwd, '.githooks', hook), 0o755);
+    r.write(`.husky/${hook}`, `#!/bin/sh\n.githooks/${hook} "$@" || exit $?\n`);
+    chmodSync(join(r.cwd, '.husky', hook), 0o755);
+  }
+  r.git('config', 'core.hooksPath', '.husky');
+  r.git('config', 'merge.ff', 'false');
+  r.git('config', 'pull.ff', 'only');
+  r.expect('hooks', 0);
+  // 게이트를 부르기는 하지만 결과를 버리고 다음 명령의 결과로 끝난다.
+  r.write('.husky/pre-commit', '#!/bin/sh\n.githooks/pre-commit "$@"\ntrue\n');
+  assert.match(r.expect('hooks', 1).stdout, /pre-commit: 실패가 전달되지 않음/);
+  r.write('.husky/pre-commit', '#!/bin/sh\n.githooks/pre-commit "$@" || exit $?\n');
+  // push 정보(표준 입력)를 넘기지 않는 도구.
+  r.write('.husky/pre-push', '#!/bin/sh\n.githooks/pre-push "$@" < /dev/null || exit $?\n');
+  assert.match(r.expect('hooks', 1).stdout, /pre-push: push 정보가 전달되지 않음/);
+});
+
+test('only the protected branch of the trusted remote is trusted when merging', t => {
+  const r = repo(t, { withGate: false });
+  withMain(t, r);
+  // 협업자의 fork를 원격으로 더했고, 그 main에는 리뷰받지 않은 의존성이 있다.
+  const fork = `${r.cwd}-fork.git`;
+  execFileSync('git', ['init', '-q', '--bare', fork]);
+  t.after(() => rmSync(fork, { recursive: true, force: true }));
+  r.git('remote', 'add', 'fork', fork);
+  r.git('switch', '-q', 'main');
+  r.write('package.json', '{"v":3}\n');
+  r.git('add', '.');
+  r.commit('not reviewed on fork');
+  r.git('push', '-q', 'fork', 'main');
+  r.git('switch', '-q', 'feat/work');
+  r.git('fetch', '-q', 'fork');
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'fork/main');
+  assert.match(r.expect('check-commit', 1).stderr, /package\.json: 보호 경로/);
+  r.git('merge', '--abort');
+  // fork 흐름처럼 PR이 들어가는 원격이 따로 있으면 설정으로 바꾼다.
+  r.write('.gated-tdd.json', JSON.stringify({ trustedRemote: 'fork' }));
+  r.git('add', '.gated-tdd.json');
+  r.expect('approve', 0);
+  r.commit('trust fork');
+  r.git('merge', '-q', '--no-ff', '--no-commit', 'fork/main');
+  r.expect('check-commit', 0);
+});

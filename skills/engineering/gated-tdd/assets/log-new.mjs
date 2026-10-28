@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 작업 로그 항목을 하나 만든다: 항목 파일 생성 + 메뉴판(INDEX.md) 한 줄 추가 + 이 브랜치 상태 파일 날짜 갱신.
 // 손으로 세 군데를 고치면 언젠가 어긋나므로 한 번에 처리한다.
-// 여러 브랜치가 동시에 진행해도 겹치지 않게, 항목 파일은 날짜와 ID로 이름 짓고 상태 파일은 브랜치마다 따로 둔다.
+// 여러 브랜치가 동시에 진행해도 겹치지 않게, 항목 파일은 날짜·작업·ID로 이름 짓고 상태 파일은 브랜치마다 따로 둔다.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -47,9 +47,16 @@ const today = new Date().toISOString().slice(0, 10);
 
 const slug = (arg('id') ?? title)
   .replace(/(:\s|\s+\u2014).*$/, '').replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·]/g, '').slice(0, 40) || 'entry';
+// 행 ID(A01 등)는 계획마다 다시 시작하므로 작업 이름을 붙인다. 작업 이름은 브랜치의 첫 마디를 뺀 것(feat/login → login).
+// ID에 이미 들어 있으면(SPEC-login, FIX-오타) 붙이지 않는다.
+const work = (branch.includes('/') ? branch.slice(branch.indexOf('/') + 1) : branch)
+  .replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·]/g, '');
+const hasWork = slug.toLowerCase().includes(work.toLowerCase());
+const item = hasWork ? id : `${work} ${id}`;
 // 순번 대신 날짜로 이름 짓는다. 순번은 두 브랜치가 같은 번호를 만들어 병합 때 부딪힌다.
-let stem = `${today}-${slug}`;
-for (let n = 2; existsSync(join(LOG_DIR, `${stem}.md`)); n += 1) stem = `${today}-${slug}-${n}`;
+const named = hasWork ? slug : `${work}-${slug}`;
+let stem = `${today}-${named}`;
+for (let n = 2; existsSync(join(LOG_DIR, `${stem}.md`)); n += 1) stem = `${today}-${named}-${n}`;
 const file = `${stem}.md`;
 const path = join(LOG_DIR, file);
 
@@ -80,7 +87,7 @@ writeFileSync(path, `# ${title} (${today}, ${status})
 `, 'utf8');
 
 // 메뉴판은 최신이 위. 표 머리(구분선) 바로 다음 줄에 끼운다.
-index.splice(divider + 1, 0, `| ${id} | ${today} | ${summary} | ${status} | [${stem}](./${file}) |`);
+index.splice(divider + 1, 0, `| ${item} | ${today} | ${summary} | ${status} | [${stem}](./${file}) |`);
 writeFileSync(INDEX, index.join(eol), 'utf8');
 
 // 이 브랜치의 상태 파일이 없으면(새 브랜치) 틀을 만든다. 칸은 에이전트가 채운다.

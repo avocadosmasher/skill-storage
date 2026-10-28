@@ -11,7 +11,7 @@
 //   hooks                 훅 네 개가 실제로 이 게이트를 부르는지, 병합 설정이 맞는지 확인한다
 import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
+import { posix } from 'node:path';
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).replace(/\n$/, '');
 const fail = (message) => { throw new Error(message); };
@@ -29,6 +29,8 @@ const DEFAULTS = {
   tests: ['*.test.*', '*.spec.*', 'test_*.py', '*_test.py', '*_test.go', '**/__tests__/**', '**/tests/**', '**/test/**',
     '**/__snapshots__/**', '**/*-snapshots/**'],
   protectedBranches: ['main', 'master'],
+  // 사용자가 PR로 고른 것만 들어가는 원격. 이 원격의 보호 브랜치만 병합 때 믿는다.
+  trustedRemote: 'origin',
   // 블로그 글처럼 개발 절차 밖에서 main으로 바로 올리던 경로. 기본은 없음.
   directPush: [],
 };
@@ -49,9 +51,11 @@ function globToRegExp(glob) {
 // 슬래시가 없는 패턴은 .gitignore처럼 어느 폴더의 파일 이름에도 맞춘다.
 const matches = (path, globs) => globs.some(glob => globToRegExp(glob).test(glob.includes('/') ? path : posix.basename(path)));
 
-function loadConfig(root) {
-  const file = join(root, '.gated-tdd.json');
-  const custom = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+// 설정은 작업 폴더가 아니라 git에서 읽는다. 커밋 검사는 스테이징된 설정(바꿨다면 그 변경 자체가 판정 대상),
+// 그 밖에는 마지막 커밋의 설정이다. 스테이징하지 않은 설정 수정이 검사를 끄지 못하게 한다.
+function loadConfig(source) {
+  let custom = {};
+  try { custom = JSON.parse(git('show', `${source}:.gated-tdd.json`)); } catch { /* 없으면 기본값 */ }
   return { ...DEFAULTS, ...custom };
 }
 
@@ -97,7 +101,7 @@ function parseNameStatus(text) {
 const objectAt = (spec) => { try { return git('rev-parse', '--verify', '-q', spec); } catch { return null; } };
 
 // 병합 중이면, 병합해 들어오는 커밋이 모두 원격 보호 브랜치(origin/main 등)에 이미 있을 때만 그 커밋들을 돌려준다.
-// 원격 보호 브랜치에는 사용자가 PR로 고른 것만 들어간다. 로컬 main이나 다른 작업 브랜치는 믿지 않는다.
+// 원격 보호 브랜치에는 사용자가 PR로 고른 것만 들어간다. 로컬 main, 다른 작업 브랜치, fork 같은 다른 원격은 믿지 않는다.
 // 충돌 뒤 git commit(pre-commit)에서는 MERGE_HEAD 파일로, 충돌 없는 병합(pre-merge-commit)에서는
 // 아직 그 파일이 없어 git이 넘기는 GITHEAD_<커밋> 환경 변수로 병합해 들어오는 커밋을 안다.
 function trustedMergeParents(config) {
@@ -106,8 +110,7 @@ function trustedMergeParents(config) {
     ? readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean)
     : Object.keys(process.env).map(key => /^GITHEAD_([0-9a-f]{40,64})$/.exec(key)?.[1]).filter(Boolean);
   if (!shas.length) return [];
-  const trusted = git('remote').split('\n').filter(Boolean)
-    .flatMap(remote => config.protectedBranches.map(branch => `refs/remotes/${remote}/${branch}`))
+  const trusted = config.protectedBranches.map(branch => `refs/remotes/${config.trustedRemote}/${branch}`)
     .filter(ref => objectAt(ref));
   const inTrusted = (sha) => trusted.some(ref => {
     try { git('merge-base', '--is-ancestor', sha, ref); return true; } catch { return false; }
@@ -156,7 +159,7 @@ try {
   const mode = process.argv[2];
   const root = git('rev-parse', '--show-toplevel');
   const approvalPath = git('rev-parse', '--git-path', 'manual-review.json');
-  const config = loadConfig(root);
+  const config = loadConfig(['check-push', 'hooks'].includes(mode) ? 'HEAD' : '');
 
   if (mode === 'approve') {
     if (git('diff', '--name-only')) fail('Unstaged changes remain. Stage reviewed files first.');
@@ -183,15 +186,21 @@ try {
     }
   } else if (mode === 'hooks') {
     // 훅 관리 도구(husky 등)와 같이 써도 판단할 수 있게, 설정 대신 실제 실행으로 본다.
-    // 확인 중에는 .githooks의 각 훅이 표시만 출력하고 멈춘다.
+    // 확인 중에는 .githooks의 각 훅이 표시만 출력하고 종료 코드 3으로 멈춘다. 표시가 나와도 그 실패가 git까지
+    // 전달되지 않거나(이어 붙인 도구가 결과를 버림), pre-push에 push 정보가 넘어오지 않으면 실제로는 막지 못한다.
     const problems = [];
+    const pushInput = git('rev-parse', '--git-path', 'gated-tdd-probe.txt');
+    writeFileSync(pushInput, `refs/heads/probe ${'0'.repeat(40)} refs/heads/probe ${'0'.repeat(40)}\n`);
     for (const hook of HOOKS) {
-      const result = spawnSync('git', ['hook', 'run', '--ignore-missing', hook], {
-        cwd: root, encoding: 'utf8', input: '', env: { ...process.env, GATED_TDD_PROBE: '1' },
+      const result = spawnSync('git', ['hook', 'run', '--ignore-missing', `--to-stdin=${pushInput}`, hook], {
+        cwd: root, encoding: 'utf8', env: { ...process.env, GATED_TDD_PROBE: '1' },
       });
-      const connected = `${result.stdout}${result.stderr}`.includes(`gated-tdd:${hook}`);
-      console.log(`${hook}: ${connected ? '연결됨' : '연결 안 됨'}`);
-      if (!connected) problems.push(hook);
+      const marks = `${result.stdout}${result.stderr}`.split(/\r?\n/);
+      const state = marks.includes(`gated-tdd:${hook}:no-stdin`) ? 'push 정보가 전달되지 않음'
+        : !marks.includes(`gated-tdd:${hook}`) ? '연결 안 됨'
+          : result.status !== 3 ? '실패가 전달되지 않음' : null;
+      console.log(`${hook}: ${state ?? '연결됨'}`);
+      if (state) problems.push(hook);
     }
     const setting = (key) => { try { return git('config', key); } catch { return ''; } };
     for (const [key, want] of [['merge.ff', 'false'], ['pull.ff', 'only']]) {

@@ -90,3 +90,23 @@ test('lists parked work from stash and park branches until it is removed', t => 
   out = r.run();
   assert.match(out, /- park\/A03 \w{7} \(원격에만 있음\)/);
 });
+
+test('lists only stashes made by the parking rule', t => {
+  const r = repo(t);
+  r.write('README.md', 'mine\n');
+  r.git('stash', 'push', '-m', '개인 실험');
+  assert.match(r.run(), /## 미뤄 둔 작업\n\n없음/);
+});
+
+test('marks a local branch whose remote branch was deleted, as after a squash merge on GitHub', t => {
+  const r = repo(t);
+  r.git('switch', '-qc', 'feat/squashed');
+  r.status('feat/squashed', '- 판정 대기: 없음\n- 확인 대기: CP1 로그인 흐름');
+  r.commit('squashed');
+  r.git('push', '-q', '-u', 'origin', 'feat/squashed');
+  r.git('switch', '-q', 'main');
+  // PR을 squash로 병합하고 원격 브랜치를 지웠다. 로컬 브랜치는 main의 조상이 아니다.
+  r.git('push', '-q', 'origin', '--delete', 'feat/squashed');
+  r.git('fetch', '-q', '--prune', 'origin');
+  assert.match(r.run(), /- feat\/squashed \(원격 브랜치가 지워짐: PR이 병합됐으면 끝난 작업\): .*확인 대기: CP1/);
+});

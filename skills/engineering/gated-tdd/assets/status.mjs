@@ -19,6 +19,9 @@ const protectedBranches = (existsSync(configFile) && JSON.parse(readFileSync(con
 const current = git('branch', '--show-current');
 
 const refs = lines(git('for-each-ref', '--format=%(refname)', 'refs/heads', 'refs/remotes'));
+// 원격 브랜치가 지워진 로컬 브랜치. GitHub의 squash·rebase 병합은 main의 조상이 되지 않아 병합 여부를 알 수 없으므로 따로 표시한다.
+const gone = new Set(lines(git('for-each-ref', '--format=%(refname)%09%(upstream:track)', 'refs/heads'))
+  .filter(line => line.endsWith('[gone]')).map(line => line.split('\t')[0]));
 const nameOf = (ref) => (ref.startsWith('refs/heads/') ? ref.slice('refs/heads/'.length) : ref.split('/').slice(3).join('/'));
 // 이름마다 ref 하나. 로컬에 있으면 로컬을, 없으면 원격을 쓴다.
 const branches = new Map();
@@ -45,13 +48,15 @@ for (const [name, { ref, remoteOnly }] of branches) {
   const text = tryGit('show', `${ref}:${statusPath(name)}`);
   if (text === null) continue;
   const waiting = text.split(/\r?\n/).filter(line => WAITING.test(line)).map(line => line.slice(2));
-  others.push(`- ${name}${remoteOnly ? ' (원격에만 있음)' : ''}: ${waiting.join(' / ') || '대기 항목 칸 없음'}`);
+  const note = remoteOnly ? ' (원격에만 있음)' : gone.has(ref) ? ' (원격 브랜치가 지워짐: PR이 병합됐으면 끝난 작업)' : '';
+  others.push(`- ${name}${note}: ${waiting.join(' / ') || '대기 항목 칸 없음'}`);
 }
 out.push('', '## 다른 브랜치의 대기', '', ...(others.length ? others : ['없음']));
 
-// 미뤄 둔 작업: 이 PC의 stash와, 다른 곳에서도 보이게 올려 둔 park/<ID> 브랜치. 둘 다 지우기 전까지 여기 남는다.
+// 미뤄 둔 작업: 이 PC의 stash와, 다른 곳에서도 보이게 올려 둔 park/<브랜치>-<ID> 브랜치. 둘 다 지우기 전까지 여기 남는다.
 const parked = [];
-const stashes = lines(git('stash', 'list', '--format=%H%x09%gd%x09%gs'));
+// 개인 stash나 다른 도구의 백업(lint-staged 등)은 미뤄 둔 작업이 아니다. 보류 절차가 붙이는 이름만 본다.
+const stashes = lines(git('stash', 'list', '--format=%H%x09%gd%x09%gs')).filter(entry => entry.includes('gated-tdd 보류:'));
 const parks = [...branches].filter(([name]) => name.startsWith('park/'))
   .map(([name, { ref, remoteOnly }]) => ({ name, sha: git('rev-parse', ref), remoteOnly }));
 for (const entry of stashes) {

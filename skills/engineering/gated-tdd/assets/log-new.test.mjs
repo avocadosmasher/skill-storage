@@ -26,9 +26,9 @@ function repo(t, { index, status = '# 상태: feat/work\n\n최종 갱신: 2026-0
 }
 
 const INDEX = '# 작업 로그\n\n| 항목 | 날짜 | 결론 | 상태 | 파일 |\n| --- | --- | --- | --- | --- |\n';
-const ENTRY = /^\d{4}-\d{2}-\d{2}-A01\.md$/;
+const ENTRY = /^\d{4}-\d{2}-\d{2}-work-A01\.md$/;
 
-test('creates an entry named by date and ID, an index row, and a status date', t => {
+test('creates an entry named by date, work and ID, an index row, and a status date', t => {
   const r = repo(t, { index: INDEX });
   const result = r.run(['A01: 가입 API', '--gate', '자동']);
   assert.equal(result.status, 0, result.stderr);
@@ -50,7 +50,7 @@ test('the same ID twice on one day gets a numbered name instead of failing', t =
 test('accepts a table divider reformatted by a formatter', t => {
   const r = repo(t, { index: '| 항목 | 날짜 | 결론 | 상태 | 파일 |\n|------|:-----|------|------|------|\n' });
   assert.equal(r.run(['A01: 가입 API']).status, 0);
-  assert.match(r.read('docs/log/INDEX.md'), /\n\| A01 \|/);
+  assert.match(r.read('docs/log/INDEX.md'), /\n\| work A01 \|/);
 });
 
 test('leaves no entry file behind when the index is broken', t => {
@@ -84,4 +84,11 @@ test('refuses to run without a branch', t => {
   assert.equal(r.run(['A01: 가입 API']).status, 1);
   assert.deepEqual(r.entries(), []);
   assert.ok(!existsSync(join(r.cwd, 'docs/status/HEAD.md')));
+});
+
+test('the work name is not repeated when the ID already contains it', t => {
+  const r = repo(t, { index: INDEX });
+  assert.equal(r.run(['SPEC-work: 요구']).status, 0);
+  assert.match(r.entries()[0], /^\d{4}-\d{2}-\d{2}-SPEC-work\.md$/);
+  assert.match(r.read('docs/log/INDEX.md'), /\n\| SPEC-work \|/);
 });
