@@ -1,7 +1,7 @@
 {
   "name": "gated-tdd-budget",
-  "version": "0.1.0",
-  "description": "gated-tdd 예산 신호의 Claude Code 어댑터: git commit 직전에 컨텍스트 사용률과 사용 한도를 .git/gated-tdd-budget.json에 남긴다",
+  "version": "0.1.1",
+  "description": "gated-tdd 예산 신호의 Claude Code 어댑터: git commit을 실행하는 Bash·PowerShell 호출 직전에 컨텍스트 사용률과 사용 한도를 .git/gated-tdd-budget.json에 남긴다",
   "author": {
     "name": "김영우",
     "url": "https://github.com/avocadosmasher"

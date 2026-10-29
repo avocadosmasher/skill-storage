@@ -21,9 +21,9 @@ async function findGitDir($: EngineInterface): Promise<string | undefined> {
 }
 
 export const register: Register = on => {
-  // git commit을 실행하는 Bash 호출 직전에 사용량을 남긴다. 커밋 직후 post-commit 훅의
-  // budget.mjs가 이 파일을 읽는다. 무엇이 실패해도 커밋은 그대로 실행한다.
-  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+  // git commit을 실행하는 셸 호출(Bash, Windows의 PowerShell) 직전에 사용량을 남긴다. 커밋 직후
+  // post-commit 훅의 budget.mjs가 이 파일을 읽는다. 무엇이 실패해도 커밋은 그대로 실행한다.
+  on('tool.call', { tool: ['Bash', 'PowerShell'] }, async ($, e, next) => {
     if (isGitCommit(e.command)) {
       try {
         const gitDir = await findGitDir($)

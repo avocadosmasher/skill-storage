@@ -69,3 +69,25 @@ test('check prints only past a threshold and never fails the commit', t => {
   assert.match(stop.stdout, /이번 세션 단위 3개/);
   assert.match(run('status').stdout, /\[예산\]/);
 });
+
+test('commits that arrive by pull or branch switch are not counted', t => {
+  const cwd = mkdtempSync(join(tmpdir(), 'budget-test-'));
+  t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const git = (...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+  git('init', '-q');
+  git('config', 'user.name', 'Budget Test');
+  git('config', 'user.email', 'budget@example.invalid');
+  git('config', 'commit.gpgsign', 'false');
+  const script = join(cwd, 'budget.mjs');
+  writeFileSync(script, readFileSync(new URL('./budget.mjs', import.meta.url)));
+  writeFileSync(join(cwd, '.gated-tdd.json'), JSON.stringify({ budget: { units: { small: 2, stop: 3 } } }));
+  const run = (mode) => spawnSync(process.execPath, [script, mode], { cwd, encoding: 'utf8' });
+  const commit = () => git('commit', '-q', '--allow-empty', '-m', 'unit');
+
+  assert.equal(run('start').status, 0);
+  // post-commit 훅을 거치지 않은 커밋(pull로 받은 남의 커밋)은 check가 불리지 않는다.
+  commit(); commit(); commit();
+  commit();
+  assert.equal(run('check').stdout, '');
+  assert.match(run('status').stdout, /이번 세션 단위 1개/);
+});

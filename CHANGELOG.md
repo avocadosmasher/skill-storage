@@ -1,5 +1,51 @@
 # skill-storage
 
+## 1.10.0
+
+`gated-tdd`를 한 번 더 점검해 1.9.0의 빈 곳을 막았습니다([`.agents/design/gated-tdd/023`](./.agents/design/gated-tdd/023-second-audit.md)).
+
+- **보호 구멍**: 스테이징하지 않은 `.gated-tdd.json` 수정으로 보호 목록을 비우면 검사가 꺼졌습니다. 이제 설정도 git에서 읽습니다(커밋 검사는 스테이징된 것, push 검사는 마지막 커밋). main 병합 때 믿는 원격은 `trustedRemote`(기본 `origin`) 하나뿐이라, fork처럼 나중에 더한 원격의 main은 그대로 검사합니다.
+- **연결 확인**: `manual-review.mjs hooks`가 게이트가 불리는지뿐 아니라, 게이트의 실패가 git까지 전달되는지와 pre-push에 push 정보가 넘어오는지도 봅니다. 전에는 이어 붙인 줄이 실패를 버리거나 pre-commit(Python)·lefthook이 push 정보를 넘기지 않아도 `연결됨`이었습니다. 도구별로 넘기는 방법과, Git LFS처럼 같은 입력이 필요한 훅과 잇는 방법을 적었습니다.
+- **상태 모아 보기**: 정지 보고 전에 상태 파일만 먼저 커밋·push하고 세션 시작에 `git fetch --prune`을 해서, 다른 브랜치·다른 PC의 판정 대기가 실제로 보입니다. GitHub에서 squash로 병합되어 원격 브랜치가 지워진 로컬 브랜치는 따로 표시하고, 병합이 확인되면 지웁니다. "미뤄 둔 작업"에는 보류 절차가 만든 stash만 나옵니다.
+- **로그 이름**: `<날짜>-<작업>-<ID>.md`로 작업 이름(브랜치의 첫 마디를 뺀 것)을 넣습니다. 행 ID는 계획마다 A01부터 다시 시작해 두 기능이 같은 이름을 만들었습니다.
+- **main 병합**: main과 이 브랜치가 같은 보호 대상 파일을 각자 고쳤으면 판정 ID `MERGE-main-<날짜>`로 양쪽 변경과 합친 결과를 묻습니다. main에서 `directPush` 경로를 올리다 원격이 앞서 있으면 `git pull --rebase`를 씁니다(push 훅이 다시 검사하므로 rebase 금지의 유일한 예외).
+- **작업 보류**: 상태 파일은 stash에서 빼고(나중에 꺼낼 수 없던 문제), PowerShell에서 깨지던 `stash@{0}` 대신 `refs/stash`를 씁니다. 원격에 올리기 전에 담긴 파일을 보고, 이름은 `park/<브랜치>-<ID>`입니다. 작은 수정을 정식 절차로 올릴 때도 이 절차로 미룹니다.
+- **도입**: 명령과 판단을 저장소 맨 위에서 합니다(monorepo 하위 폴더에서 두 번 도입하던 문제). 이미 자기 `.githooks/`를 쓰는 저장소는 덮어쓰지 않고, 도입 뒤에 다른 훅 도구가 들어오면 자리를 되찾지 않고 이어 붙이는 안을 보고합니다. 포맷터·린터가 복사한 스크립트와 INDEX를 건드리지 않게 제외 목록에 넣는 단계가 생겼습니다. 기존 `docs/adr/` 같은 폴더가 있으면 그 폴더를 씁니다.
+- **다른 스킬**: 채택 선언에 "계획·요구·TDD는 gated-tdd가 맡는다" 줄을 더해 superpowers·spec-kit 같은 스킬과 계획 문서가 두 벌 생기지 않게 합니다. capture-compare의 비교 시트는 고른 것 하나만 `docs/decision/`에 남깁니다.
+- 예전 배치 옮기기의 순서와 진행 중인 기능 브랜치를 옮기는 방법을 바로잡았고, 기능 ID `product`를 쓰지 않게 했으며, 브랜치 이름을 바꿀 때 상태 파일도 함께 바꿉니다.
+- **이미 도입한 저장소**: 1.9.0 배치라면 `scripts/gated-tdd/`의 스크립트 넷과 `.githooks/pre-push`를 다시 복사합니다. 게이트 파일이므로 판정(`도입-갱신`)을 받습니다. `AGENTS.md` 채택 선언에 "다른 스킬과의 순서" 줄을, `CLAUDE.md` 첫 줄에 "저장소 맨 위에서"를 더합니다. 1.9.0 전 배치는 "예전 배치에서 옮기기"가 그대로 한 번에 처리합니다.
+
+## 1.9.0
+
+`gated-tdd`가 다른 도구와 자리를 다투지 않고, 여러 브랜치를 동시에 진행해도 깨지지 않게 바꿨습니다([`.agents/design/gated-tdd/022`](./.agents/design/gated-tdd/022-coexistence-and-parallel-branches.md)).
+
+- **배치 변경**: 스크립트를 `scripts/gated-tdd/`에 모으고, 게이트 자체의 테스트는 더 복사하지 않습니다. 전에는 vitest·jest가 복사된 `*.test.mjs`까지 돌려 `npm test`가 실패했고, 프로젝트에 있던 `scripts/budget.mjs`를 덮어쓸 수 있었습니다.
+- **브랜치별 상태**: 저장소 맨 위 `STATUS.md` 대신 브랜치마다 `docs/status/<브랜치>.md`를 둡니다. 세션은 새 스크립트 `status.mjs`로 시작하고, 지금 브랜치의 상태와 다른 브랜치(원격에만 있는 것 포함)의 판정·확인 대기, 미뤄 둔 작업을 한 번에 봅니다. 로그 파일 이름은 순번 대신 `<날짜>-<ID>.md`이고, `docs/log/INDEX.md`는 `.gitattributes`의 `merge=union`으로 두 브랜치의 줄을 모두 남깁니다.
+- **훅 자리**: husky 같은 다른 훅 도구가 이미 git 훅을 쓰고 있으면 자리를 빼앗지 않고 그 도구의 훅 맨 앞에 게이트 호출을 이어 붙입니다. 새 `manual-review.mjs hooks`가 훅 네 개를 실제로 실행해 게이트가 불리는지 확인하고, 세션 시작마다 이것으로 확인합니다.
+- **main 병합**: `git merge origin/main`으로 main을 받을 때, 원격 main에 이미 들어간 보호 대상 변경은 다시 판정받지 않습니다. 충돌을 풀며 고친 파일, main이 바꾸지 않은 파일, 로컬 브랜치에서 온 변경은 그대로 검사합니다.
+- **훅 구멍 막기**: 충돌 없는 병합도 검사하도록 `pre-merge-commit` 훅을 더하고, `merge.ff false`로 fast-forward 병합을 끕니다(`pull.ff only`로 `git pull`은 지금처럼). rebase·cherry-pick·revert는 훅을 거치지 않아 금지했습니다. 훅은 마지막 커밋의 게이트로 검사해, 게이트를 고치다 만 채로 두어도 검사가 꺼지지 않습니다. 훅 파일이 Windows에서 CRLF로 풀려 깨지지 않게 `.gitattributes`에 `eol=lf`를 둡니다.
+- **작업 보류**: 급한 일로 하던 작업을 치울 때 이름 붙인 stash와 원격 `park/<ID>` 브랜치로 남기고, 상태 파일과 세션 시작 출력에서 지울 때까지 보여 줍니다.
+- 동작을 바꾸지 않는 리팩터링·의존성 작업은 요구 문서를 생략하고 계획부터 한다고 `requirements.md`까지 맞췄습니다.
+- `grill-me-plus`를 부를 때 결정을 그 스킬의 `DECISIONS.md`가 아니라 계획·요구·`docs/decision/`에 쓰게 하고, `capture-compare`의 시안 개수는 그 스킬을 따릅니다.
+- **이미 도입한 저장소**: 다음 세션에서 에이전트가 새 배치로 한 번 옮기자고 결정 보고를 합니다(`references/approval-gate.md`의 "예전 배치에서 옮기기"). `AGENTS.md` 채택 선언의 "새로 clone하면" 줄이 `git config core.hooksPath .githooks && git config merge.ff false && git config pull.ff only`로 바뀌고, main 반영 줄이 더해집니다. `CLAUDE.md` 첫 줄은 "세션을 시작하면 `node scripts/gated-tdd/status.mjs`부터 실행한다."입니다.
+
+## 1.8.1
+
+`gated-tdd` 전체 점검에서 나온 버그를 고쳤습니다([`.agents/design/gated-tdd/021`](./.agents/design/gated-tdd/021-full-audit.md)). 이미 도입한 저장소는 `scripts/manual-review.mjs`, `scripts/budget.mjs`, `scripts/log-new.mjs`를 다시 복사해야 반영됩니다. 게이트 파일이므로 그 커밋은 판정을 받습니다.
+
+- 승인 게이트가 한글 같은 ASCII 밖의 경로를 제대로 읽습니다. 전에는 git 설정에 따라 기존 한글 테스트의 변경이 검사를 빠져나가거나, 한글 이름 테스트를 새로 추가하면 커밋이 계속 막혔습니다.
+- 테스트나 보호 경로의 파일을 패턴 밖으로 옮기는 이름 변경, 스냅숏 이미지 같은 테스트 바이너리 변경도 판정을 받습니다. 기본 테스트 경로에 `**/__snapshots__/**`, `**/*-snapshots/**`를 더했습니다.
+- 훅 실행 권한을 주는 명령을 파일 이름 세 개로 적고 `100755`인지 확인합니다. `*`를 쓰면 PowerShell에서 실패해, macOS·Linux에서 clone한 사람의 훅이 꺼진 채 커밋될 수 있었습니다.
+- `log-new.mjs`가 Prettier가 바꾼 표 구분선을 읽고, 실패할 때 항목 파일을 남기지 않으며, 하위 폴더에서도 돌고, 파일의 줄바꿈(CRLF/LF)을 지킵니다.
+- 예산 신호의 단위 수가 이 작업 폴더에서 만든 커밋만 셉니다. 전에는 pull로 받은 남의 커밋까지 세어 거짓 "정지"가 날 수 있었습니다.
+- 훅이 Node.js 18 이상으로 돈다는 전제를 도입 절차와 문서에 적었습니다.
+- 결정·확인이 통과하면 로그 제목, INDEX 상태 칸, STATUS를 `통과`로 바꾸는 단계를 넣었습니다. 전에는 `판정 대기`가 남을 수 있었습니다.
+- 문서 사이의 표현을 맞췄습니다: 작은 수정의 조건은 셋, "인수 기준"으로 통일, 훅 오류 문구가 계획 판정 범위 안의 기록도 허용함을 밝힘.
+
+## gated-tdd-budget 0.1.1
+
+- PowerShell 도구로 실행한 `git commit`에도 사용량을 남깁니다. 전에는 Bash 도구만 봐서 Windows의 PowerShell 커밋은 단위 수로만 판단했습니다.
+
 ## 1.8.0
 
 - `gated-tdd`에 작은 수정 경로를 더했습니다(`references/maintenance.md`). 요청만으로 할 일이 분명하고, 커밋 하나로 끝나고, 기존 합의나 되돌리기 어려운 것(권한, 데이터, 의존성 등 보호 대상)을 건드리지 않으면 요구 문서와 계획 없이 처리합니다. 시작할 때 "작은 수정으로 처리함"을 알리고, 버그는 재현부터, 동작을 바꾸면 실패 테스트부터 씁니다. 문구·화면·설정은 테스트 대신 전후 캡처 같은 확인 방법을 남기고, 화면·문구는 고친 뒤 확인을 한 번 받습니다. 기록은 로그 한 건을 남기고 그 로그로 커밋 메시지를 씁니다. 커밋이 더 필요해지거나 판정할 것이 생기거나 훅이 막거나 원인 가설이 3번 틀리면 멈추고 정식 절차로 올립니다. 정의는 superpowers, Matt Pocock skills, pstack, Addy Osmani agent-skills를 비교해 정했습니다([`.agents/design/gated-tdd/020`](./.agents/design/gated-tdd/020-small-fix-path.md)).
