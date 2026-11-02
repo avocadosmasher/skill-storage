@@ -1,5 +1,9 @@
 # skill-storage
 
+## 1.11.1
+
+- `thinking-aloud-writing`: 소제목을 내용 탐색 기준으로 짓고, 글의 목적·정보의 변동성에 맞춰 사례 범위를 정하도록 보완했습니다. 사용자 수정본은 원문 비교로 반영하고 명시적 교정과 추정을 구분합니다([설계 002](./.agents/design/thinking-aloud-writing/002-findable-headings-and-editorial-scope.md)).
+
 ## 1.11.0
 
 `gated-tdd`에 버그 수정 경로를 더했습니다([`.agents/design/gated-tdd/024`](./.agents/design/gated-tdd/024-bugfix-root-cause-path.md)). 전에는 작은 수정이 아닌 버그가 기능 개발처럼 요구 보고와 계획 보고로 두 번 멈췄고, 원인 조사 규칙은 "추측하지 말고 잰다" 한 줄이었습니다.
