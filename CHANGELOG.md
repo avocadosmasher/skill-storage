@@ -1,5 +1,9 @@
 # skill-storage
 
+## 미배포
+
+- `thinking-aloud-writing`: 수정 요청의 이유와 적용 범위를 분석하고, 저자·프로젝트의 선호를 저장해 다음 집필 전에 읽도록 보완했습니다. 개인화와 공용 스킬 개선을 구분하고, 일회성 교정과 추정한 취향의 과잉 일반화를 막습니다([설계 003](./.agents/design/thinking-aloud-writing/003-editorial-feedback-learning.md)).
+
 ## 1.11.1
 
 - `thinking-aloud-writing`: 소제목을 내용 탐색 기준으로 짓고, 글의 목적·정보의 변동성에 맞춰 사례 범위를 정하도록 보완했습니다. 사용자 수정본은 원문 비교로 반영하고 명시적 교정과 추정을 구분합니다([설계 002](./.agents/design/thinking-aloud-writing/002-findable-headings-and-editorial-scope.md)).
