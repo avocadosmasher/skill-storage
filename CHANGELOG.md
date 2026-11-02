@@ -2,7 +2,7 @@
 
 ## 미배포
 
-- `thinking-aloud-writing`: 수정 요청의 이유와 적용 범위를 분석하고, 저자·프로젝트의 선호를 저장해 다음 집필 전에 읽도록 보완했습니다. 개인화와 공용 스킬 개선을 구분하고, 일회성 교정과 추정한 취향의 과잉 일반화를 막습니다([설계 003](./.agents/design/thinking-aloud-writing/003-editorial-feedback-learning.md)).
+- `thinking-aloud-writing`: 지속 개선을 맡기면 수정 요청에서 얻은 문체·구성 기준을 스킬의 `voice.md`·`composition.md`와 작업 지시문에 편입합니다. 현재 사용자를 저자로 간주하며, 외부 선호 메모만 남기는 방식을 기본 개선 경로로 삼지 않습니다. 경험 소개 글의 도입 흐름도 실제 문체 기준에 반영했습니다. 사실 정정·이번 글의 예외·미확인 추정은 확정 규칙으로 확대하지 않습니다([설계 004](./.agents/design/thinking-aloud-writing/004-incorporate-feedback-into-skill.md)).
 
 ## 1.11.1
 
