@@ -2,6 +2,10 @@
 
 ## 미배포
 
+- `thinking-aloud-writing`: 문장 교정 뒤 문단의 연결과 생략된 포함·전달·반영 대상을 확인하도록 보완했습니다. `것`으로 뭉뚱그린 표현은 구체적이고 자연스러운 대안을 우선하고, 인접 문장의 명사형 반복은 문단 전체에서 교정합니다. 관계 대상이 모호하면 반복 회피보다 명확성을 우선합니다. 안내 표·본문·결론의 역할을 구분하며, 특정 단어·조사를 일괄 강제하지 않습니다([설계 006](./.agents/design/thinking-aloud-writing/006-paragraph-flow-and-explicit-relations.md)).
+
+- `thinking-aloud-writing`: 여러 도구·역할은 전체 구성 자료로 먼저 보여 주고 설계 이유와 실제 정보 흐름을 뒤에서 설명하도록 보완했습니다. 표·폴더 트리·흐름도를 목적에 맞게 선택하고, 공개용 구조의 생략 범위를 밝히도록 했습니다([설계 005](./.agents/design/thinking-aloud-writing/005-visual-overview-and-harness-explanation.md)).
+
 - `thinking-aloud-writing`: 지속 개선을 맡기면 수정 요청에서 얻은 문체·구성 기준을 스킬의 `voice.md`·`composition.md`와 작업 지시문에 편입합니다. 현재 사용자를 저자로 간주하며, 외부 선호 메모만 남기는 방식을 기본 개선 경로로 삼지 않습니다. 경험 소개 글의 도입 흐름도 실제 문체 기준에 반영했습니다. 사실 정정·이번 글의 예외·미확인 추정은 확정 규칙으로 확대하지 않습니다([설계 004](./.agents/design/thinking-aloud-writing/004-incorporate-feedback-into-skill.md)).
 
 ## 1.11.1
