@@ -2,6 +2,8 @@
 
 ## 미배포
 
+- `gated-tdd`: 테스트 없는 코드를 고치기 전에 지금 동작을 고정 테스트로 붙잡습니다([`.agents/design/gated-tdd/025`](./.agents/design/gated-tdd/025-characterization-tests-for-untested-code.md)). 이번 변경이 영향을 줄 수 있는 경로만, 맞는지 따지지 않고 지금 나오는 값을 기대값으로 적어 고침 커밋 앞에 따로 커밋합니다. 판정은 받지 않고 다음 보고에 알립니다. 틀려 보이는 값은 `의심:` 표시를 붙여 그대로 고정하고 고칠지는 따로 묻습니다. 테스트에서 부를 수 없는 코드는 mock·가짜 시계나 바깥(API, 테스트 DB)에서 먼저 잡고, 안 될 때만 현재 시각을 인자로 받게 하는 것 같은 기계적 수정(틈 만들기)을 테스트보다 먼저 합니다. 제품은 있는데 테스트 도구가 없으면 도입 보고에서 함께 제안합니다. Claude Code, Codex, Gemini 세 에이전트로 시나리오 셋을 돌려 찾은 빈 곳을 반영했습니다. 이미 도입한 저장소는 스크립트와 훅이 바뀌지 않아 다시 복사할 것이 없습니다.
+
 - `thinking-aloud-writing`: 문장 교정 뒤 문단의 연결과 생략된 포함·전달·반영 대상을 확인하도록 보완했습니다. `것`으로 뭉뚱그린 표현은 구체적이고 자연스러운 대안을 우선하고, 인접 문장의 명사형 반복은 문단 전체에서 교정합니다. 관계 대상이 모호하면 반복 회피보다 명확성을 우선합니다. 안내 표·본문·결론의 역할을 구분하며, 특정 단어·조사를 일괄 강제하지 않습니다([설계 006](./.agents/design/thinking-aloud-writing/006-paragraph-flow-and-explicit-relations.md)).
 
 - `thinking-aloud-writing`: 여러 도구·역할은 전체 구성 자료로 먼저 보여 주고 설계 이유와 실제 정보 흐름을 뒤에서 설명하도록 보완했습니다. 표·폴더 트리·흐름도를 목적에 맞게 선택하고, 공개용 구조의 생략 범위를 밝히도록 했습니다([설계 005](./.agents/design/thinking-aloud-writing/005-visual-overview-and-harness-explanation.md)).

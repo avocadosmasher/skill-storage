@@ -1,8 +1,8 @@
 # 011. 유지보수 개발 절차(버그 수정, 레거시, 리팩터링, 의존성)는 다음 개선으로 미룬다
 
 - 날짜: 2026-10-16
-- 상태: 보류 (M2는 [020](./020-small-fix-path.md), M1은 [024](./024-bugfix-root-cause-path.md)에서 채택)
-- 반영: M2는 skill-storage 1.8.0, M1은 1.11.0. 나머지는 없음 (작업 유형 표의 유지보수 행은 "요구를 생략하고 계획부터", [022](./022-coexistence-and-parallel-branches.md))
+- 상태: 보류 (M2는 [020](./020-small-fix-path.md), M1은 [024](./024-bugfix-root-cause-path.md), M3는 [025](./025-characterization-tests-for-untested-code.md)에서 채택)
+- 반영: M2는 skill-storage 1.8.0, M1은 1.11.0, M3는 다음 배포. 나머지는 없음 (작업 유형 표의 유지보수 행은 "요구를 생략하고 계획부터", [022](./022-coexistence-and-parallel-branches.md))
 
 ## 배경
 
@@ -57,6 +57,7 @@
 M2는 2026-10-20 [020](./020-small-fix-path.md)에서 정했다. 다음은 M1(버그 수정의 원인 조사)이다. 작은 수정의 "재현 먼저"와 "가설 3번 실패 시 올림"이 그 출발점이다.
 M1에서 함께 정할 것(020 시뮬레이션에서 나옴): 작은 수정에서 올라온 버그를 기능 지도에 넣는지, 커밋하지 않은 재현 테스트를 요구·계획 커밋 동안 어떻게 두는지.
 M1은 2026-11-02 [024](./024-bugfix-root-cause-path.md)에서 정했다. 위 두 질문의 답도 거기 있다.
+M3는 2026-11-03 [025](./025-characterization-tests-for-untested-code.md)에서 정했다. 고정 테스트 규칙은 M4의 완료 기준으로도 쓴다.
 만들 때 상세는 `references/maintenance.md`에 두고, SKILL.md 작업 유형 표의 유지보수 행이 그 파일을 가리키게 한다([009](./009-lifecycle-audit-and-structure.md)).
 
 ## 다시 볼 신호
