@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-03
 - 상태: 채택
-- 반영: skill-storage 다음 배포
+- 반영: skill-storage 1.12.0
 - 바꾼 것: [014](./014-plan-approval-covers-protected-changes.md)의 "보호 대상 변경 칸에는 무엇을 어떻게 바꾸는지까지 적는다"(현재 원칙 1)에, 테스트의 기계적 수정만 종류로 적는 예외를 둠
 
 ## 배경

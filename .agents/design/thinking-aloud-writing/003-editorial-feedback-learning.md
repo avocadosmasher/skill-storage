@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-02
 - 상태: 대체됨 (004)
-- 반영: feat/writing-feedback-learning, 미배포
+- 반영: skill-storage 1.12.0 (004가 바꾼 형태로)
 
 후속 사용자 교정으로 [004](./004-incorporate-feedback-into-skill.md)가 외부 선호 기록을 기본으로 삼는 배치 결정을 대체했다. 아래 내용은 당시 판단의 기록이며 현재 편입 절차는 004와 스킬 본문을 따른다.
 

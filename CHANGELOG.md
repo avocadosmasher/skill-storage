@@ -1,6 +1,10 @@
 # skill-storage
 
-## 미배포
+## 1.12.0
+
+`gated-tdd`의 유지보수 절차를 마저 채웠습니다. 1.8.0의 작은 수정, 1.11.0의 버그 수정에 이어 테스트 없는 코드의 고정 테스트, 큰 리팩터링, 의존성 업데이트 경로가 더해져 [`011`](./.agents/design/gated-tdd/011-maintenance-backlog.md)에 미뤄 둔 유지보수 과제가 모두 끝났습니다. `thinking-aloud-writing`도 함께 보완했습니다.
+
+- **이미 도입한 저장소**: 이번에는 게이트 스크립트가 바뀌었습니다. lock 파일을 보호하려면 `scripts/gated-tdd/`를 새 버전으로 바꿔야 합니다. 다음 세션에서 에이전트가 옛 버전이라고 알리고, 갱신을 고르면 `chore/gated-tdd-update` 브랜치에서 결정 보고(`도입-갱신`) 한 번으로 처리합니다. 자세한 내용은 아래 첫 항목에 있습니다.
 
 - `gated-tdd`: 의존성 업데이트 경로를 더했습니다([`.agents/design/gated-tdd/027`](./.agents/design/gated-tdd/027-dependency-updates.md)). 들어올 패키지와 목표 버전은 늘 사용자가 보고 정합니다. 패키지 하나면 설치하고 테스트한 뒤 결정 보고 한 번(`DEP-<패키지>-<버전>`)으로, 둘 이상이면 패키지마다 현재·목표 버전과 변경 기록 요약을 적은 계획 보고 한 번으로 받습니다. 공급망 공격에 대비해 공개된 지 7일이 지난 버전에서 고르고, 알려진 취약점을 고치는 버전만 기다리지 않습니다. major이거나 동작 변경이 적힌 업데이트는 바뀐 기능을 쓰는 곳을 고정 테스트로 먼저 붙잡습니다. 테스트가 실패하면 기대값을 고쳐 맞추지 않고, patch·minor는 그 패키지를 빼고 진행하며 major와 취약점 패키지는 멈추고 묻습니다. 패키지 이름이 바뀌거나 테스트 도구를 올려 생기는 테스트 수정(import 경로, 이름만 바뀐 API, 스냅숏 형식)은 리팩터링의 기계적 수정처럼 종류로 판정받습니다. lock 파일이 양쪽에서 바뀐 병합은 손으로 합치지 않고 다시 설치해 만듭니다. Claude Code, Codex, Gemini 세 에이전트로 시나리오 셋을 돌려 찾은 빈 곳을 반영했습니다.
   - 게이트의 기본 보호 목록에 lock 파일(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `uv.lock`, `Cargo.lock`, `go.sum`, `Gemfile.lock` 등)과 빠져 있던 매니페스트(`Pipfile`, `composer.json`, `libs.versions.toml`)를 더했습니다. 지금까지는 `npm update`처럼 lock 파일만 바꾸는 업데이트가 판정 없이 커밋됐습니다.

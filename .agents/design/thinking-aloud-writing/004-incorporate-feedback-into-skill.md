@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-03
 - 상태: 채택
-- 반영: feat/writing-feedback-learning, 미배포
+- 반영: skill-storage 1.12.0
 
 ## 배경
 
