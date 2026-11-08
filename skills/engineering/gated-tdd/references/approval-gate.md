@@ -117,7 +117,10 @@ rebase, cherry-pick, revert, fast-forward 병합은 `pre-commit`도 `pre-merge-c
 {
   "decide": [
     "**/migrations/**", "**/migrate/**", "*.sql", "schema.prisma",
-    "package.json", "requirements*.txt", "pyproject.toml", "go.mod", "Cargo.toml", "Gemfile", "pom.xml", "build.gradle*",
+    "package.json", "requirements*.txt", "pyproject.toml", "Pipfile", "go.mod", "Cargo.toml", "Gemfile", "composer.json",
+    "pom.xml", "build.gradle*", "libs.versions.toml",
+    "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb",
+    "Pipfile.lock", "poetry.lock", "uv.lock", "go.sum", "Cargo.lock", "Gemfile.lock", "composer.lock", "gradle.lockfile",
     ".env*", "*.pem", "*.key",
     "Dockerfile*", "docker-compose*.yml", "docker-compose*.yaml", "*.tf", ".github/workflows/**"
   ],
@@ -138,6 +141,10 @@ rebase, cherry-pick, revert, fast-forward 병합은 `pre-commit`도 `pre-merge-c
 인증·권한처럼 저장소마다 위치가 다른 보호 대상은 `decide`에 직접 더한다(예: `"src/auth/**"`).
 그 코드가 아직 없으면 그 영역을 처음 만드는 기능의 계획에서 더한다. `.gated-tdd.json` 변경을 그 행의 보호 대상 변경 칸에
 적어 계획 보고에서 판정받는다(초기 개발은 골격의 "게이트 설정" 행).
+
+의존성은 매니페스트와 lock 파일을 함께 막는다. `npm update`처럼 lock 파일만 바꾸는 명령도 새 버전을 들이기 때문이다.
+매니페스트 변경을 판정받으면 그 설치가 만든 lock 파일 변경도 같은 판정에 든다. 의도하지 않은 lock 변경은 되돌린다(`references/dependencies.md`).
+기본 목록에 없는 생태계(.NET의 `*.csproj`, `packages.lock.json` 등)는 `decide`에 더한다.
 
 `trustedRemote`는 PR이 병합되는 원격이다. fork에서 작업하고 PR을 원래 저장소로 보내는 흐름이면 그 원격 이름(예: `"upstream"`)으로 바꾼다.
 
@@ -166,6 +173,14 @@ rebase, cherry-pick, revert, fast-forward 병합은 `pre-commit`도 `pre-merge-c
 
 - Claude Code: 선택 설치 mod `gated-tdd-budget`이 `git commit`을 실행하는 Bash·PowerShell 호출 직전에 이 파일을 쓴다. 사용자에게 마켓플레이스 추가(`claude plugin marketplace add avocadosmasher/skill-storage`, 이미 했으면 생략)와 `claude plugin install gated-tdd-budget@avocadosmasher`를 안내한다. 작업 폴더에서 위로 찾은 저장소에만 쓴다.
 - 사용량을 알 방법이 없는 도구(현재 Codex 훅 입력에는 사용량 필드가 없음)는 대리 지표만 쓴다.
+
+## 스크립트를 새 버전으로 바꾸기
+
+저장소의 `scripts/gated-tdd/`와 `.githooks/`는 도입할 때 복사한 것이라 스킬이 바뀌어도 그대로다. 세션 시작에서 옛 버전이면 알린다(SKILL.md 0절).
+사용자가 갱신을 고르면 main에서 딴 `chore/gated-tdd-update` 브랜치에서 이 스킬의 `assets/`로 덮어쓴다(게이트 테스트 `*.test.mjs`는 복사하지 않음).
+`hooks` 확인이 통과하면 결정 보고 한 번(판정 ID `도입-갱신`)으로 받고, 통과하면 바로 PR을 연다. 진행 중인 작업 브랜치는 이 PR이 병합된 뒤 `git merge origin/main`으로 받는다.
+보고에는 바뀐 동작(새로 막는 파일 등)을 쓴다. `.gated-tdd.json`에 키를 직접 적은 저장소는 바뀐 기본값이 들어오지 않으므로
+그 키의 기본값에 새로 생긴 항목을 같은 보고에서 보여 주고 더할지 묻는다.
 
 ## 예전 배치에서 옮기기
 

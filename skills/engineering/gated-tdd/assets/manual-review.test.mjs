@@ -75,6 +75,22 @@ test('protected paths need approval; approval is bound to the staged tree', t =>
   r.expect('check-commit', 1);
 });
 
+test('lock files are protected even when the manifest does not change', t => {
+  const r = repo(t, { withGate: false });
+  r.write('package.json', '{"dependencies":{"a":"^1.2.3"}}\n');
+  r.write('package-lock.json', '{"packages":{"node_modules/a":{"version":"1.2.3"}}}\n');
+  r.write('services/api/go.sum', 'a v1.0.0 h1:x\n');
+  r.git('add', '.');
+  r.expect('approve', 0);
+  r.commit();
+  r.write('package-lock.json', '{"packages":{"node_modules/a":{"version":"1.2.9"}}}\n');
+  r.write('services/api/go.sum', 'a v1.0.1 h1:y\n');
+  r.git('add', '.');
+  const blocked = r.expect('check-commit', 1);
+  assert.match(blocked.stderr, /package-lock\.json: 보호 경로/);
+  assert.match(blocked.stderr, /services\/api\/go\.sum: 보호 경로/);
+});
+
 test('config adds protected paths', t => {
   const r = repo(t, { withGate: false });
   r.commit();

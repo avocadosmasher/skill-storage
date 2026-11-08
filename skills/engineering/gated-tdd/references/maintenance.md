@@ -1,7 +1,7 @@
 # 유지보수: 작은 수정과 버그 수정
 
 판정 질문과 훅은 두 경로 모두 그대로 적용한다. 고칠 코드에 테스트가 없으면 `references/characterization.md`의 고정 테스트를 함께 따른다.
-큰 리팩터링은 `references/refactoring.md`를 따른다. 의존성 업데이트의 전용 절차는 아직 없다. 기능 개발과 같은 절차를 타되 요구를 생략한다(SKILL.md 2절).
+큰 리팩터링은 `references/refactoring.md`, 의존성 업데이트는 `references/dependencies.md`를 따른다. 패키지 하나만 올리는 일도 작은 수정이 아니다(보호 대상).
 
 ## 작은 수정
 

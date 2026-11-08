@@ -86,6 +86,15 @@ test('refuses to run without a branch', t => {
   assert.ok(!existsSync(join(r.cwd, 'docs/status/HEAD.md')));
 });
 
+test('a version in the ID keeps its dots in the file name', t => {
+  const r = repo(t, { index: INDEX });
+  execFileSync('git', ['checkout', '-q', '-b', 'deps/lodash-4.17.21'], { cwd: r.cwd });
+  const result = r.run(['DEP-lodash-4.17.21: lodash 4.17.20 → 4.17.21', '--gate', '결정']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(r.entries()[0], /^\d{4}-\d{2}-\d{2}-DEP-lodash-4\.17\.21\.md$/);
+  assert.match(r.read('docs/log/INDEX.md'), /\n\| DEP-lodash-4\.17\.21 \|/);
+});
+
 test('the work name is not repeated when the ID already contains it', t => {
   const r = repo(t, { index: INDEX });
   assert.equal(r.run(['SPEC-work: 요구']).status, 0);
