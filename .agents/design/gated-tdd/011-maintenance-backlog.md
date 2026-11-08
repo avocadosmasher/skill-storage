@@ -2,7 +2,7 @@
 
 - 날짜: 2026-10-16
 - 상태: 대체됨 (M2는 [020](./020-small-fix-path.md), M1은 [024](./024-bugfix-root-cause-path.md), M3는 [025](./025-characterization-tests-for-untested-code.md), M4는 [026](./026-behavior-preserving-refactoring.md), M5는 [027](./027-dependency-updates.md)에서 채택)
-- 반영: M2는 skill-storage 1.8.0, M1은 1.11.0, M3·M4·M5는 다음 배포
+- 반영: M2는 skill-storage 1.8.0, M1은 1.11.0, M3·M4·M5는 1.12.0
 
 ## 배경
 
