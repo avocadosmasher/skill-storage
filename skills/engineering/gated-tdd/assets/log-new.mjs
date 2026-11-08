@@ -45,12 +45,14 @@ const summary = arg('summary') ?? '(결론 한 줄을 채운다: 무엇이 문�
 const status = arg('status') ?? GATE_STATUS[gate] ?? '판정 대기';
 const today = new Date().toISOString().slice(0, 10);
 
+// 버전이 든 ID(DEP-lodash-4.17.21)를 위해 점은 남긴다. 끝의 점은 Windows가 파일 이름에서 지우므로 뗀다.
 const slug = (arg('id') ?? title)
-  .replace(/(:\s|\s+\u2014).*$/, '').replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·]/g, '').slice(0, 40) || 'entry';
+  .replace(/(:\s|\s+\u2014).*$/, '').replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·.]/g, '').slice(0, 40)
+  .replace(/\.+$/, '') || 'entry';
 // 행 ID(A01 등)는 계획마다 다시 시작하므로 작업 이름을 붙인다. 작업 이름은 브랜치의 첫 마디를 뺀 것(feat/login → login).
 // ID에 이미 들어 있으면(SPEC-login, FIX-오타) 붙이지 않는다.
 const work = (branch.includes('/') ? branch.slice(branch.indexOf('/') + 1) : branch)
-  .replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·]/g, '');
+  .replace(/[/\s]+/g, '-').replace(/[^0-9A-Za-z가-힣\-·.]/g, '').replace(/\.+$/, '');
 const hasWork = slug.toLowerCase().includes(work.toLowerCase());
 const item = hasWork ? id : `${work} ${id}`;
 // 순번 대신 날짜로 이름 짓는다. 순번은 두 브랜치가 같은 번호를 만들어 병합 때 부딪힌다.

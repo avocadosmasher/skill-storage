@@ -22,7 +22,11 @@ const HOOKS = ['pre-commit', 'pre-merge-commit', 'pre-push', 'post-commit'];
 const DEFAULTS = {
   decide: [
     '**/migrations/**', '**/migrate/**', '*.sql', 'schema.prisma',
-    'package.json', 'requirements*.txt', 'pyproject.toml', 'go.mod', 'Cargo.toml', 'Gemfile', 'pom.xml', 'build.gradle*',
+    'package.json', 'requirements*.txt', 'pyproject.toml', 'Pipfile', 'go.mod', 'Cargo.toml', 'Gemfile', 'composer.json',
+    'pom.xml', 'build.gradle*', 'libs.versions.toml',
+    // lock 파일만 바뀌는 범위 안 업데이트(npm update 등)도 새 버전을 들인다.
+    'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb',
+    'Pipfile.lock', 'poetry.lock', 'uv.lock', 'go.sum', 'Cargo.lock', 'Gemfile.lock', 'composer.lock', 'gradle.lockfile',
     '.env*', '*.pem', '*.key',
     'Dockerfile*', 'docker-compose*.yml', 'docker-compose*.yaml', '*.tf', '.github/workflows/**',
   ],
