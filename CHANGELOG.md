@@ -1,6 +1,8 @@
 # skill-storage
 
-## Unreleased
+## 1.13.0
+
+작업 결과 보고서 스킬 `result-report`를 더했습니다. 끝낸 작업을 코드를 열지 않는 사람도 읽을 수 있는 한 열짜리 HTML 보고서로 정리하고, 어느 모델이 써도 같은 모양이 나오도록 디자인 명세 · 완성 예시 · 검사 스크립트를 함께 둡니다.
 
 - `result-report`: 끝낸 작업을 한 열짜리 깔끔한 HTML 결과 보고서로 정리하는 스킬을 `productivity`에 더했습니다. 무엇을 만들었나(제품 맥락 · 전체 흐름 그림 · 기능 묶음) · 결과 · 주요 결정 · 검증 중 발견한 문제 · 남은 과제 다섯 절로 쓰고, 흐름 그림의 칸 색으로 이번 작업 · 동료 · 함께 · 이미 한 것 · 아직 안 한 것을 나누며, 기능마다 담당 코드를 종류별 색 칩으로 붙입니다. 한 사이드 프로젝트에서 여러 번 고쳐 승인된 보고서 형태를 범용으로 뽑았습니다([설계 001](./.agents/design/result-report/001-skill-from-approved-report.md)). 어느 모델이 써도 같은 모양이 나오도록 틀의 CSS를 고정하고, 부품 · 글 길이를 정한 디자인 명세, 가상 프로젝트 완성 예시, 규칙 검사 스크립트(`scripts/check-report.mjs`, Node 18 이상)를 함께 넣었습니다([설계 002](./.agents/design/result-report/002-same-output-across-models.md)).
 
