@@ -144,6 +144,7 @@ claude plugin uninstall <mod 이름>@avocadosmasher       # 제거
 - **[jasoseo-coach](./skills/productivity/jasoseo-coach/SKILL.md)**: 헤드헌터 관점으로 자기소개서를 함께 쓰고 검토한다. 재료 수집, JD 리서치, 초안, 글자수 관리, 검토 루프, 면접 예상 질문까지.
 - **[idea-banking](./skills/productivity/idea-banking/SKILL.md)**: 떠오른 도구·스킬·자동화·학습 아이디어를 원문 그대로 로컬 Markdown 파일에 바로 기록하고, 나중에 검색·비교·구체화한다. `/ideas` 패널 mod를 따로 설치할 수 있다.
 - **[thinking-aloud-writing](./skills/productivity/thinking-aloud-writing/SKILL.md)**: 공부 자료·Git 저장소·개발 기록·기존 초안으로 기술 블로그 글을 함께 기획하고 쓴다. 독자가 이해할 순서로 구성을 잡고, 빈틈은 인터뷰로 채우며, 질문을 던지고 답을 회수하는 설명과 친근한 구어체로 쓴다.
+- **[result-report](./skills/productivity/result-report/SKILL.md)**: 끝낸 작업을 한 열짜리 깔끔한 HTML 결과 보고서로 정리한다. 무엇을 만들었고 왜 그렇게 정했는지를 쉬운 말로 쓰고, 전체 흐름 그림에 이번 작업의 위치를 색으로, 기능마다 담당 코드를 종류별 색 칩으로 붙인다.
 
 ## 저장소 구조
 
