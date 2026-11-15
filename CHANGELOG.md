@@ -1,8 +1,10 @@
 # skill-storage
 
-## Unreleased
+## 1.14.0
 
-- `result-report`: 전체 흐름 그림을 diagram-design 스킬(MIT, 별도 설치)로 그린 SVG로 붙일 수 있게 했습니다. 틀에 그림 부품(`figure.fig`)을 더해 CSS를 v2로 올리고, diagram-design에 넘길 값과 붙이는 순서를 `references/diagram-style.md`에 두었습니다. 검사 스크립트는 그림 부품 안의 SVG 하나만 허용하고 접근성 제목 · 설명, 외부 주소 · 스크립트 금지, 칸 색과 범례 일치를 봅니다. diagram-design이 없으면 지금처럼 HTML 상자 그림을 씁니다. 이전 틀(v1)로 만든 보고서는 새 틀의 CSS와 달라 검사가 실패하므로, 다시 검사하려면 `<style>`을 새 틀 것으로 바꿔야 합니다([설계 003](./.agents/design/result-report/003-diagram-design-figure.md)).
+`result-report`의 전체 흐름 그림을 diagram-design 스킬로 그린 SVG로 붙일 수 있게 했습니다. 흐름 선이 다른 층을 지나가 오해를 부르는 그림은 검사가 막습니다.
+
+- `result-report`: 전체 흐름 그림을 diagram-design 스킬(MIT, 별도 설치)로 그린 SVG로 붙일 수 있게 했습니다. 틀에 그림 부품(`figure.fig`)을 더해 CSS를 v2로 올리고, diagram-design에 넘길 값과 붙이는 순서를 `references/diagram-style.md`에 두었습니다. 검사 스크립트는 그림 부품 안의 SVG 하나만 허용하고 접근성 제목 · 설명, 외부 주소 · 스크립트 금지, 칸 색과 범례 일치를 봅니다. diagram-design이 없으면 지금처럼 HTML 상자 그림을 씁니다. 이전 틀(v1)로 만든 보고서는 새 틀의 CSS와 달라 검사가 실패하므로, 다시 검사하려면 `<style>`을 새 틀 것으로 바꿔야 합니다. 그림의 선은 흐름 선(화살표)과 관계 선(화살표 없는 점선)으로 나눠, 흐름 선이 출발 · 도착이 아닌 층이나 칸을 가로지르면 검사가 실패로 막고, 화살표 없는 실선이 가로지르면 경고합니다([설계 003](./.agents/design/result-report/003-diagram-design-figure.md)).
 
 ## 1.13.0
 
