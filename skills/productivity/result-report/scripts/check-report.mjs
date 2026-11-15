@@ -16,7 +16,7 @@ if (!target) {
   process.exit(2);
 }
 
-const html = readFileSync(target, "utf8");
+const raw = readFileSync(target, "utf8");
 const template = readFileSync(templatePath, "utf8");
 const fails = [];
 const warns = [];
@@ -34,6 +34,42 @@ const textOf = (s) =>
     .trim();
 const all = (re, s) => [...s.matchAll(re)];
 
+// 0. 1.2 그림의 SVG(figure.fig 안, references/diagram-style.md)는 여기서 따로 검사하고 나머지 검사에서는 뺀다
+const FILL = { "b-mine": /#eaf2ff\b/i, "b-peer": /#fcebf6\b/i, "b-both": /#efeafc\b/i, "b-past": /#f1f1f1\b/i, "b-next": /#c8c8c8\b/i };
+const figures = all(/<figure class="fig">([\s\S]*?)<\/figure>/g, raw);
+const figUsed = new Set();
+const svgTexts = [];
+for (const [, inner] of figures) {
+  const svgs = all(/<svg\b[\s\S]*?<\/svg>/g, inner).map((m) => m[0]);
+  if (svgs.length !== 1) {
+    fails.push(`그림(figure.fig)에 SVG가 ${svgs.length}개. 정확히 1개`);
+    continue;
+  }
+  const svg = svgs[0];
+  const open = svg.match(/<svg\b[^>]*>/)[0];
+  const id = open.match(/\sid="([^"]+)"/)?.[1];
+  if (!id) fails.push("그림 SVG에 id가 없음");
+  if (!/\srole="img"/.test(open)) fails.push('그림 SVG에 role="img"가 없음');
+  if (!/\saria-labelledby="[^"]+"/.test(open)) fails.push("그림 SVG에 aria-labelledby가 없음");
+  if (!/^<svg\b[^>]*>\s*<title\b/.test(svg)) fails.push("그림 SVG의 첫 자식이 <title>이 아님");
+  if (!/<desc\b/.test(svg)) fails.push("그림 SVG에 <desc>가 없음");
+  if (/<script|<foreignObject|<image\b/i.test(svg)) fails.push("그림 SVG에 script · foreignObject · image 가 있음");
+  if (/\son[a-z]+\s*=/i.test(svg)) fails.push("그림 SVG에 on… 이벤트 속성이 있음");
+  if (/href\s*=\s*"\s*https?:|url\(\s*['"]?https?:|@import|@font-face/i.test(svg)) fails.push("그림 SVG가 외부 주소 · 글꼴을 부름");
+  for (const [, block] of all(/<style>([\s\S]*?)<\/style>/g, svg)) {
+    const css = block.replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [, prelude] of all(/([^{}]+)\{/g, css)) {
+      const p = prelude.trim();
+      if (!p || p.startsWith("@") || /^(from|to|\d+%)/.test(p)) continue;
+      for (const sel of p.split(","))
+        if (id && !sel.trim().startsWith(`#${id}`)) fails.push(`그림 SVG의 <style> 규칙이 #${id} 로 시작하지 않음: ${sel.trim().slice(0, 30)}`);
+    }
+  }
+  for (const [cls, re] of Object.entries(FILL)) if (re.test(svg)) figUsed.add(cls);
+  svgTexts.push(svg.replace(/<style>[\s\S]*?<\/style>/g, " "));
+}
+const html = raw.replace(/(<figure class="fig">[\s\S]*?)<svg\b[\s\S]*?<\/svg>/g, "$1");
+
 // 1. CSS 는 틀 그대로
 const style = styleOf(html);
 if (style === null) fails.push("<style> 블록이 없음");
@@ -43,10 +79,11 @@ if (all(/<style/g, html).length > 1) fails.push("<style> 블록이 둘 이상임
 // 2. 금지 요소
 if (/<script/i.test(html)) fails.push("<script> 를 씀");
 if (/<link\b/i.test(html) || /@import/i.test(html)) fails.push("외부 CSS · 글꼴(<link>, @import)을 씀");
-if (/<img\b|<svg\b|<iframe\b/i.test(html)) fails.push("이미지 · svg · iframe 을 씀");
+if (/<img\b|<iframe\b/i.test(html)) fails.push("이미지 · iframe 을 씀");
+if (/<svg\b/i.test(html)) fails.push("그림 부품(figure.fig) 밖에 svg 를 씀");
 if (/\sstyle\s*=/.test(html)) fails.push('인라인 스타일(style="...")을 씀');
-if (/[\u2014\u2013]/.test(html)) fails.push("em dash · en dash 를 씀. 범위는 ~, 나열은 ' · '");
-if (/\p{Extended_Pictographic}/u.test(textOf(html).replace(/[▼→↺①-⑳]/g, ""))) fails.push("이모지를 씀");
+if (/[\u2014\u2013]/.test(html + svgTexts.join(" "))) fails.push("em dash · en dash 를 씀. 범위는 ~, 나열은 ' · '");
+if (/\p{Extended_Pictographic}/u.test(textOf(html + svgTexts.join(" ")).replace(/[▼→↺①-⑳]/g, ""))) fails.push("이모지를 씀");
 
 // 3. 남은 자리
 const left = all(/\{\{[^}]*\}\}/g, html).map((m) => m[0]);
@@ -55,7 +92,7 @@ if (left.length) fails.push(`채우지 않은 자리 ${left.length}개: ${[...ne
 // 4. 클래스는 정해진 것만
 const allowed = new Set(
   (
-    "page meta summary note feature k result todo impl grp it chip what chip-legend wf legend2 sw layer lt row steps box fn who down arrow loop " +
+    "page meta summary note feature k result todo impl grp it chip what chip-legend wf fig scroll legend2 sw layer lt row steps box fn who down arrow loop " +
     "b-mine b-peer b-both b-past b-next c-entry c-config c-flow c-tool c-fn"
   ).split(/\s+/),
 ).add("");
@@ -81,8 +118,10 @@ else {
   lis.filter((t) => t.length > 80).forEach((t) => warns.push(`요약 핵심 줄이 80자를 넘음: ${t.slice(0, 30)}…`));
 }
 
-// 7. 흐름 그림
-if (!/<div class="wf">/.test(body)) fails.push("흐름 그림(.wf)이 없음");
+// 7. 1.2 그림: figure.fig(diagram-design SVG) 또는 .wf 중 하나
+const hasWf = /<div class="wf">/.test(body);
+if (!hasWf && !figures.length) fails.push("1.2 그림(figure.fig 또는 .wf)이 없음");
+if (figures.length + (hasWf ? 1 : 0) > 1) fails.push("1.2 그림이 둘 이상임. figure.fig 와 .wf 중 하나만 둔다");
 const boxes = all(/<div class="box ([^"]+)">([\s\S]*?)<\/div>/g, body);
 for (const [, cls, inner] of boxes) {
   if (!/\bb-(mine|peer|both|past|next)\b/.test(cls)) fails.push(`그림 칸에 색 클래스가 없음: ${textOf(inner).slice(0, 20)}`);
@@ -92,8 +131,9 @@ for (const [, cls, inner] of boxes) {
   if (name && textOf(name[1]).replace(/^[①-⑳]\s*/, "").length > 14) warns.push(`칸 이름이 14자를 넘음: ${textOf(name[1])}`);
   if (/\bb-both\b/.test(cls) && !/class="who"/.test(inner)) fails.push(`함께(b-both) 칸에 누가 무엇을 했는지(.who)가 없음: ${textOf(inner).slice(0, 20)}`);
 }
-const used = new Set(boxes.map(([, cls]) => cls.match(/b-(mine|peer|both|past|next)/)?.[0]).filter(Boolean));
+const used = figures.length ? figUsed : new Set(boxes.map(([, cls]) => cls.match(/b-(mine|peer|both|past|next)/)?.[0]).filter(Boolean));
 const legend = new Set(all(/class="sw (b-[a-z]+)"/g, body).map((m) => m[1]));
+if (figures.length && !legend.size) fails.push("그림(figure.fig)에 범례(.legend2)가 없음");
 for (const c of used) if (!legend.has(c)) fails.push(`그림에 쓴 색 ${c} 이 범례에 없음`);
 for (const c of legend) if (!used.has(c)) fails.push(`범례의 색 ${c} 을 그림에서 쓰지 않음`);
 
@@ -125,7 +165,7 @@ for (const c of chipKinds) if (legendKinds.size && !legendKinds.has(c)) fails.pu
 for (const c of legendKinds) if (!chipKinds.has(c)) fails.push(`범례의 칩 종류 ${c} 를 쓰지 않음`);
 
 // 9. 문체 (경고)
-const sentences = textOf(body.replace(/<table[\s\S]*?<\/table>/g, " ").replace(/<div class="wf">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, " "))
+const sentences = textOf(body.replace(/<figure class="fig">[\s\S]*?<\/figure>/g, " ").replace(/<table[\s\S]*?<\/table>/g, " ").replace(/<div class="wf">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, " "))
   .split(/(?<=[.?!])\s+/)
   .filter((t) => /[가-힣]/.test(t));
 const da = sentences.filter((t) => /(다|요)\.$/.test(t));
