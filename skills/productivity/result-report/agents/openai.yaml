@@ -1,0 +1,3 @@
+interface:
+  display_name: "Result Report"
+  short_description: "작업 결과를 깔끔한 한 열 HTML 보고서로"

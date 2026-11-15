@@ -1,5 +1,9 @@
 # skill-storage
 
+## Unreleased
+
+- `result-report`: 끝낸 작업을 한 열짜리 깔끔한 HTML 결과 보고서로 정리하는 스킬을 `productivity`에 더했습니다. 무엇을 만들었나(제품 맥락 · 전체 흐름 그림 · 기능 묶음) · 결과 · 주요 결정 · 검증 중 발견한 문제 · 남은 과제 다섯 절로 쓰고, 흐름 그림의 칸 색으로 이번 작업 · 동료 · 함께 · 이미 한 것 · 아직 안 한 것을 나누며, 기능마다 담당 코드를 종류별 색 칩으로 붙입니다. 한 사이드 프로젝트에서 여러 번 고쳐 승인된 보고서 형태를 범용으로 뽑았습니다([설계 001](./.agents/design/result-report/001-skill-from-approved-report.md)). 어느 모델이 써도 같은 모양이 나오도록 틀의 CSS를 고정하고, 부품 · 글 길이를 정한 디자인 명세, 가상 프로젝트 완성 예시, 규칙 검사 스크립트(`scripts/check-report.mjs`, Node 18 이상)를 함께 넣었습니다([설계 002](./.agents/design/result-report/002-same-output-across-models.md)).
+
 ## 1.12.0
 
 `gated-tdd`의 유지보수 절차를 마저 채웠습니다. 1.8.0의 작은 수정, 1.11.0의 버그 수정에 이어 테스트 없는 코드의 고정 테스트, 큰 리팩터링, 의존성 업데이트 경로가 더해져 [`011`](./.agents/design/gated-tdd/011-maintenance-backlog.md)에 미뤄 둔 유지보수 과제가 모두 끝났습니다. `thinking-aloud-writing`도 함께 보완했습니다.

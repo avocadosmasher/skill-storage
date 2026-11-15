@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{제목}}</title>
+<!--
+  result-report 템플릿 (skill-storage). 채우는 법은 같은 스킬의 SKILL.md.
+  - 한 열 문서체. 문장 끝은 명사형(~함 · ~음 · ~임). 테스트 개수 같은 숫자는 눈에 안 띄게
+  - 용어는 처음 나올 때 쉬운 말로. 함수 이름은 설명의 주어가 아니라 "구현" 칩으로 첨부
+  - 그림 칸 색: b-mine 이번 작업(나) · b-peer 동료 · b-both 함께(누가 무엇을 .who 한 줄) · b-past 이미 한 것 · b-next 아직 안 한 것
+  - 구현 칩 색: c-entry 진입점 · c-config 정의 · 설정 · c-flow 흐름 · 실행 · c-tool 도구 · 외부 연동 · c-fn 함수 · 처리.
+    종류 이름은 프로젝트에 맞게 바꿔 쓴다(SKILL.md "구현 칩"). 종류 순서대로 모으고 .grp 로 묶음 이름
+-->
+<style>
+/* result-report 디자인 v1. 이 블록은 고치지 않는다(references/design.md) */
+body { margin: 0; background: #fff; color: #222; font-family: "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; font-size: 15px; line-height: 1.75; word-break: keep-all; }
+.page { max-width: 820px; margin: 0 auto; padding: 56px 28px 96px; }
+h1 { font-size: 1.7rem; margin: 0 0 6px; }
+.meta { color: #777; font-size: .9rem; margin-bottom: 28px; }
+h2 { font-size: 1.2rem; margin: 44px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }
+h3 { font-size: 1rem; margin: 28px 0 8px; }
+p { margin: 6px 0 10px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 4px; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid #eee; }
+th { color: #666; font-weight: 600; background: #fafafa; border-bottom: 1px solid #ddd; }
+td.k { width: 92px; color: #666; white-space: nowrap; }
+table.result td:first-child { width: 150px; }
+table.todo td p { margin: 2px 0 0; color: #444; }
+table.todo td:nth-child(2), table.todo td:nth-child(3) { white-space: nowrap; color: #666; }
+code { font-family: Consolas, monospace; font-size: .88em; background: #f4f4f4; padding: 1px 5px; border-radius: 4px; }
+.summary { background: #f7f8fa; border-left: 3px solid #4a5a7a; padding: 14px 18px; margin: 8px 0 4px; }
+.summary ul { margin: 6px 0 0; padding-left: 18px; }
+ul { padding-left: 20px; }
+li { margin: 3px 0; }
+.note { color: #777; font-size: .88rem; }
+td ul { margin: 0; padding-left: 18px; }
+.feature { margin: 12px 0 22px; }
+.feature p { margin: 4px 0 8px; }
+.impl { font-size: .86rem; }
+.impl .grp { font-size: .74rem; color: #999; margin: 8px 0 3px; }
+.impl .grp:first-child { margin-top: 0; }
+.impl .it { display: flex; align-items: baseline; gap: 8px; margin: 3px 0; }
+.chip { flex: none; display: inline-block; font-family: Consolas, monospace; font-size: .8rem; border: 1px solid; border-radius: 4px; padding: 0 7px; line-height: 1.7; white-space: nowrap; }
+.c-fn { color: #1d4f9e; background: #eaf2ff; border-color: #c4d6f5; }
+.c-tool { color: #0f6b5c; background: #e3f5f0; border-color: #b6e0d5; }
+.c-flow { color: #7a4a00; background: #fff1dc; border-color: #f0d3a2; }
+.c-config { color: #6b3fa0; background: #f2ebfb; border-color: #d9c8f0; }
+.c-entry { color: #444; background: #f0f0f0; border-color: #d4d4d4; }
+.impl .what { min-width: 0; color: #666; font-size: .8rem; line-height: 1.5; }
+.chip-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: #666; margin: 6px 0 4px; }
+.chip-legend .chip { margin-right: 4px; }
+}
+/* 전체 워크플로 그림 */
+.wf { margin: 14px 0 8px; font-size: .86rem; line-height: 1.5; }
+.wf .layer { border: 1px solid #d5d9e0; border-radius: 8px; padding: 10px 12px 12px; margin: 0; background: #fff; }
+.wf .layer > .lt { font-weight: 700; color: #444; margin-bottom: 8px; font-size: .84rem; }
+.wf .layer > .lt span { font-weight: 400; color: #888; }
+.wf .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.wf .box { flex: 1 1 0; min-width: 120px; border-radius: 6px; padding: 7px 9px; }
+.wf .box b { display: block; font-size: .88rem; }
+.wf .box small { display: block; color: #777; font-size: .74rem; margin-top: 2px; }
+.wf .box .fn { display: block; font-family: Consolas, monospace; font-size: .72rem; color: #555; margin-top: 3px; }
+.wf .down { text-align: center; color: #999; font-size: .78rem; margin: 3px 0; }
+.wf .arrow { flex: none; align-self: center; color: #999; }
+.wf .steps .box { min-width: 0; }
+.wf .loop { color: #777; font-size: .78rem; margin-top: 7px; }
+.b-mine { background: #eaf2ff; border: 2px solid #2f6fd6; }
+.b-mine b { color: #1d4f9e; }
+.b-peer { background: #fcebf6; border: 2px solid #d98cbf; }
+.b-peer b { color: #9c3f7c; }
+.b-both { background: #efeafc; border: 2px solid #9a82d6; }
+.b-both b { color: #5b3fa8; }
+.b-past { background: #f1f1f1; border: 1px solid #d6d6d6; color: #777; }
+.b-past b { color: #666; }
+.b-next { background: #fff; border: 1px dashed #c8c8c8; color: #999; }
+.b-next b { color: #999; }
+.wf .who { display: block; font-size: .72rem; color: #6b55b0; margin-top: 2px; }
+.wf .legend2 { display: flex; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: #555; margin: 0 0 10px; }
+.wf .legend2 span.sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+@media (max-width: 640px) {
+  .page { padding: 32px 16px 64px; }
+  .feature table, .feature tbody, .feature tr, .feature td { display: block; width: auto; }
+  .feature td.k { padding: 10px 0 2px; border-bottom: none; font-weight: 600; }
+  .feature td:not(.k) { padding: 0 0 10px; }
+  code { overflow-wrap: anywhere; }
+  .wf .row { flex-direction: column; }
+  .wf .arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>{{제목}}</h1>
+<div class="meta">{{제품}} · {{담당}} · {{기간}} · {{PR 상태}}</div>
+
+<div class="summary">
+  {{무엇을 마쳤고 어떻게 판단했는지 한 문단}}
+  <ul>
+    <li>{{핵심 1: 무엇을 왜 바꿨나}}</li>
+    <li>{{핵심 2}}</li>
+    <li>{{핵심 3}}</li>
+  </ul>
+</div>
+
+<h2>1. 무엇을 만들었나</h2>
+
+<h3>1.1 만드는 제품</h3>
+<p>{{제품이 무엇이고 누가 어떻게 쓰는지}}</p>
+<p>제품이 지켜야 할 약속 가운데 이번 작업과 직접 관련된 것은 다음과 같음.</p>
+<ul>
+  <li><b>{{약속}}</b>: {{어기면 어떤 일이 생기나}}</li>
+</ul>
+
+<h3>1.2 전체 워크플로와 이번 작업의 위치</h3>
+<p>{{전체 흐름을 한 문단으로}}</p>
+<div class="wf">
+  <div class="legend2">
+    <span><span class="sw b-mine"></span>이번 작업({{나}})</span>
+    <span><span class="sw b-peer"></span>{{동료}}</span>
+    <span><span class="sw b-both"></span>함께</span>
+    <span><span class="sw b-past"></span>이미 한 것</span>
+    <span><span class="sw b-next"></span>아직 안 한 것</span>
+  </div>
+  <div class="layer">
+    <div class="lt">{{층 이름}} <span>{{층 설명}}</span></div>
+    <div class="row">
+      <div class="box b-mine"><b>{{칸}}</b><small>{{설명}}</small><span class="fn">{{코드 이름}}</span></div>
+      <div class="box b-both"><b>{{칸}}</b><small>{{설명}}</small><span class="who">{{누가 무엇을}}</span><span class="fn">{{코드 이름}}</span></div>
+      <div class="box b-peer"><b>{{칸}}</b><small>{{설명}}</small><span class="fn">{{코드 이름}}</span></div>
+      <div class="box b-next"><b>{{칸}}</b><small>{{설명}}</small></div>
+    </div>
+  </div>
+  <div class="down">▼ {{다음 층으로 가는 이유}}</div>
+  <div class="layer">
+    <div class="lt">{{순서가 있는 흐름}}</div>
+    <div class="row steps">
+      <div class="box b-mine"><b>① {{단계}}</b><small>{{설명}}</small><span class="fn">{{코드}}</span></div>
+      <div class="arrow">→</div>
+      <div class="box b-past"><b>② {{단계}}</b><small>{{설명}}</small><span class="fn">{{코드}}</span></div>
+    </div>
+  </div>
+</div>
+
+<h3>1.3 만든 묶음</h3>
+<p class="note">묶음마다 맨 아래 "구현" 줄은 그 기능을 맡은 코드 이름임. 색은 코드의 종류를 뜻함.</p>
+<div class="chip-legend">
+  <span><span class="chip c-entry">{{진입점}}</span>{{사용자가 직접 부르는 것: CLI 명령 · 화면 · API 등}}</span>
+  <span><span class="chip c-config">{{정의 · 설정}}</span>{{동작을 정하는 설정 값 · 정의}}</span>
+  <span><span class="chip c-flow">{{흐름 · 실행}}</span>{{여러 단계를 이어 부르는 함수}}</span>
+  <span><span class="chip c-tool">{{도구 · 외부 연동}}</span>{{모델 도구 · 외부 서비스 연결}}</span>
+  <span><span class="chip c-fn">{{함수 · 처리}}</span>{{저장 · 읽기 · 판정 같은 처리}}</span>
+</div>
+
+<div class="feature">
+<p><b>① {{묶음 이름}}</b></p>
+<table>
+  <tr><td class="k">역할</td><td>{{제품에서 맡는 일}}</td></tr>
+  <tr><td class="k">동작</td><td>{{사용자 · 모델이 무엇을 하면 어떻게 되나}}</td></tr>
+  <tr><td class="k">특징</td><td><ul><li>{{핵심 규칙과 그 이유}}</li></ul></td></tr>
+  <tr><td class="k">구현</td><td><div class="impl">
+    <div class="grp">{{진입점}}</div><div class="it"><span class="chip c-entry">{{이름}}</span><span class="what">{{하는 일}}</span></div>
+    <div class="grp">{{함수 · 처리}}</div><div class="it"><span class="chip c-fn">{{이름}}</span><span class="what">{{하는 일}}</span></div>
+  </div></td></tr>
+</table>
+</div>
+
+<h2>2. 결과</h2>
+<table class="result">
+  <tr><th>기능</th><th>한 일</th><th>확인한 것</th></tr>
+  <tr><td>{{기능}}<br><span class="note">{{번호}}</span></td><td>{{한 일}}</td><td>{{무엇을 어떻게 확인했고 결과는}}</td></tr>
+</table>
+
+<h2>3. 주요 결정</h2>
+<h3>3.1 {{결정을 질문 형태로}}</h3>
+<table>
+  <tr><td class="k">문제</td><td>{{}}</td></tr>
+  <tr><td class="k">검토한 안</td><td>{{}}</td></tr>
+  <tr><td class="k">근거</td><td>{{실측 · 자료}}</td></tr>
+  <tr><td class="k">결론</td><td>{{고른 안과 한계. 다시 볼 조건은 기록에 있을 때만}}</td></tr>
+</table>
+
+<h2>4. 검증 중 발견한 문제</h2>
+<ul>
+  <li><b>{{문제}}</b>: {{무엇이 틀렸고 어떻게 바로잡았나}}</li>
+</ul>
+
+<h2>5. 남은 과제</h2>
+<table class="todo">
+  <tr><th>과제</th><th>담당</th><th>시점</th></tr>
+  <tr><td><b>{{과제}}</b><p>{{무엇이고 왜 남았나, 쉬운 말로}}</p></td><td>{{}}</td><td>{{}}</td></tr>
+</table>
+
+</div>
+</body>
+</html>
