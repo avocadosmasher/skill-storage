@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>책갈피 2주차 결과 보고서</title>
 <style>
-/* result-report 디자인 v1. 이 블록은 고치지 않는다(references/design.md) */
+/* result-report 디자인 v2. 이 블록은 고치지 않는다(references/design.md) */
 body { margin: 0; background: #fff; color: #222; font-family: "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; font-size: 15px; line-height: 1.75; word-break: keep-all; }
 .page { max-width: 820px; margin: 0 auto; padding: 56px 28px 96px; }
 h1 { font-size: 1.7rem; margin: 0 0 6px; }
@@ -70,6 +70,13 @@ td ul { margin: 0; padding-left: 18px; }
 .wf .who { display: block; font-size: .72rem; color: #6b55b0; margin-top: 2px; }
 .wf .legend2 { display: flex; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: #555; margin: 0 0 10px; }
 .wf .legend2 span.sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+/* 아키텍처 그림: diagram-design 으로 그린 SVG 를 그대로 붙임(references/diagram-style.md) */
+.fig { margin: 14px 0 8px; }
+.fig .legend2 { display: flex; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: #555; margin: 0 0 8px; }
+.fig .legend2 span.sw { display: inline-block; width: 14px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+.fig .scroll { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+.fig svg { display: block; width: 100%; height: auto; }
+.fig figcaption { color: #777; font-size: .8rem; margin-top: 6px; }
 @media (max-width: 640px) {
   .page { padding: 32px 16px 64px; }
   .feature table, .feature tbody, .feature tr, .feature td { display: block; width: auto; }
@@ -78,6 +85,7 @@ td ul { margin: 0; padding-left: 18px; }
   code { overflow-wrap: anywhere; }
   .wf .row { flex-direction: column; }
   .wf .arrow { transform: rotate(90deg); }
+  .fig svg { width: 760px; max-width: none; }
 }
 </style>
 </head>
@@ -110,7 +118,7 @@ td ul { margin: 0; padding-left: 18px; }
 <p>사용자가 화면에서 책을 찾으면 API가 서비스를 부르고, 서비스는 외부 도서 API와 저장소를 씀. 화면은 동료가, API와 서비스 · 저장은 내가 맡음.</p>
 <p>아래 그림에서 파란 칸이 이번 작업, 자주색 칸이 동료 작업, 보라색 칸이 함께 만든 부분임. 이미 있던 것은 회색, 아직 안 한 것은 흰색. 칸 아래 작은 글씨는 그 칸의 코드 이름임.</p>
 
-<div class="wf">
+<figure class="fig">
   <div class="legend2">
     <span><span class="sw b-mine"></span>이번 작업(나)</span>
     <span><span class="sw b-peer"></span>동료</span>
@@ -118,39 +126,104 @@ td ul { margin: 0; padding-left: 18px; }
     <span><span class="sw b-past"></span>이미 한 것</span>
     <span><span class="sw b-next"></span>아직 안 한 것</span>
   </div>
+  <div class="scroll"><svg id="bookmark-week2-root" viewBox="0 0 960 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="bookmark-week2-title bookmark-week2-desc">
+        <title id="bookmark-week2-title">책갈피 2주차 · 전체 흐름과 이번 작업의 위치</title>
+        <desc id="bookmark-week2-desc">화면이 API를 부르면 책 찾기, 중복 확인, 서재에 저장이 차례로 이어지고 기록 DB와 도서 API 연결을 쓰며, 칸 색은 이번 작업과 동료 작업, 함께 만든 것, 이미 있던 것, 아직 안 한 것을 나눈다.</desc>
+        <defs>
+      <style>#bookmark-week2-root { --color-paper:   #ffffff;
+      --color-ink:     #222222;
+      --color-muted:   #666666;
+      --color-accent:  #2f6fd6;
+      --font-sans:     'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', 'Noto Serif KR', serif;
+      --font-mono:     Consolas, ui-monospace, monospace; }
+      #bookmark-week2-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #bookmark-week2-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#bookmark-week2-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="bookmark-week2-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#666666"/></marker>
+        </defs>
 
-  <div class="layer">
-    <div class="lt">화면 <span>사용자가 보는 곳</span></div>
-    <div class="row">
-      <div class="box b-peer"><b>책 검색 화면</b><small>제목 · 저자로 찾고 서재에 넣기</small><span class="fn">SearchPage</span></div>
-      <div class="box b-both"><b>독서 기록 화면</b><small>날짜별 쪽수 입력 · 진행률</small><span class="who">화면 동료, 진행률 계산 나</span><span class="fn">ReadingLog</span></div>
-      <div class="box b-next"><b>통계 화면</b><small>월별 독서량 그래프</small><span class="fn">3주차</span></div>
-    </div>
-  </div>
-  <div class="down">▼ 화면이 API를 부름</div>
+        <rect width="100%" height="100%" fill="#ffffff"/>
 
-  <div class="layer">
-    <div class="lt">책 등록 흐름 <span>서재에 넣을 때마다 차례로</span></div>
-    <div class="row steps">
-      <div class="box b-mine"><b>① 책 찾기</b><small>외부 도서 API 검색</small><span class="fn">search_books</span></div>
-      <div class="arrow">→</div>
-      <div class="box b-mine"><b>② 중복 확인</b><small>ISBN, 없으면 제목 · 저자</small><span class="fn">find_duplicate</span></div>
-      <div class="arrow">→</div>
-      <div class="box b-mine"><b>③ 서재에 저장</b><small>책 · 첫 기록을 한 번에</small><span class="fn">add_to_shelf</span></div>
-    </div>
-    <div class="loop">↺ 기록을 고치면 새 줄로 덧붙이고 이전 줄은 남김 <code>append_log</code></div>
-  </div>
-  <div class="down">▼</div>
+        <!-- Layer panels (neutral, drawn before arrows and nodes) -->
+        <rect x="40" y="32" width="880" height="172" rx="8" fill="#fafafa" stroke="#d5d9e0" stroke-width="1"/>
+        <text x="60" y="58" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif"><tspan fill="#222222" font-size="14" font-weight="600">화면</tspan><tspan fill="#777777" font-size="12" dx="8">사용자가 보는 곳</tspan></text>
 
-  <div class="layer">
-    <div class="lt">저장 · 외부</div>
-    <div class="row">
-      <div class="box b-mine"><b>기록 DB</b><small>책 · 서재 · 날짜별 기록</small><span class="fn">storage/*</span></div>
-      <div class="box b-past"><b>로그인</b><small>1주차 · 이메일 로그인</small><span class="fn">auth</span></div>
-      <div class="box b-mine"><b>도서 API 연결</b><small>국립중앙도서관 API, 응답 캐시</small><span class="fn">book_api</span></div>
-    </div>
-  </div>
-</div>
+        <rect x="40" y="252" width="880" height="176" rx="8" fill="#fafafa" stroke="#d5d9e0" stroke-width="1"/>
+        <text x="60" y="278" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif"><tspan fill="#222222" font-size="14" font-weight="600">책 등록 흐름</tspan><tspan fill="#777777" font-size="12" dx="8">서재에 넣을 때마다 차례로</tspan></text>
+
+        <rect x="40" y="476" width="880" height="152" rx="8" fill="#fafafa" stroke="#d5d9e0" stroke-width="1"/>
+        <text x="60" y="502" fill="#222222" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">저장 · 외부</text>
+
+        <!-- Arrows (behind boxes) -->
+        <line x1="480" y1="204" x2="480" y2="252" stroke="#666666" stroke-width="1.2" marker-end="url(#bookmark-week2-arrow)"/>
+        <line x1="308" y1="338" x2="356" y2="338" stroke="#666666" stroke-width="1.2" marker-end="url(#bookmark-week2-arrow)"/>
+        <line x1="604" y1="338" x2="652" y2="338" stroke="#666666" stroke-width="1.2" marker-end="url(#bookmark-week2-arrow)"/>
+        <line x1="480" y1="428" x2="480" y2="476" stroke="#666666" stroke-width="1.2" marker-end="url(#bookmark-week2-arrow)"/>
+
+        <!-- Arrow label (Korean register: 12px sans 500, 16px mask, beside the vertical segment) -->
+        <rect x="488" y="220" width="116" height="16" rx="2" fill="#ffffff"/>
+        <text x="546" y="232" fill="#666666" font-size="12" font-weight="500" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif" text-anchor="middle">화면이 API를 부름</text>
+
+        <!-- Layer 1: 화면 -->
+        <!-- b-peer: 책 검색 화면 -->
+        <rect x="60" y="72" width="248" height="112" rx="6" fill="#fcebf6" stroke="#d98cbf" stroke-width="2"/>
+        <text x="76" y="112" fill="#9c3f7c" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">책 검색 화면</text>
+        <text x="76" y="132" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">제목 · 저자로 찾고 서재에 넣기</text>
+        <text x="76" y="152" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">SearchPage</text>
+
+        <!-- b-both: 독서 기록 화면 -->
+        <rect x="356" y="72" width="248" height="112" rx="6" fill="#efeafc" stroke="#9a82d6" stroke-width="2"/>
+        <text x="372" y="102" fill="#5b3fa8" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">독서 기록 화면</text>
+        <text x="372" y="122" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">날짜별 쪽수 입력 · 진행률</text>
+        <text x="372" y="142" fill="#6b55b0" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">화면 동료, 진행률 계산 나</text>
+        <text x="372" y="162" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">ReadingLog</text>
+
+        <!-- b-next: 통계 화면 -->
+        <rect x="652" y="72" width="248" height="112" rx="6" fill="#ffffff" stroke="#c8c8c8" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="668" y="112" fill="#999999" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">통계 화면</text>
+        <text x="668" y="132" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">월별 독서량 그래프</text>
+        <text x="668" y="152" fill="#555555" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">3주차</text>
+
+        <!-- Layer 2: 책 등록 흐름 (b-mine x3) -->
+        <rect x="60" y="292" width="248" height="92" rx="6" fill="#eaf2ff" stroke="#2f6fd6" stroke-width="2"/>
+        <text x="76" y="322" fill="#1d4f9e" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">① 책 찾기</text>
+        <text x="76" y="342" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">외부 도서 API 검색</text>
+        <text x="76" y="362" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">search_books</text>
+
+        <rect x="356" y="292" width="248" height="92" rx="6" fill="#eaf2ff" stroke="#2f6fd6" stroke-width="2"/>
+        <text x="372" y="322" fill="#1d4f9e" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">② 중복 확인</text>
+        <text x="372" y="342" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">ISBN, 없으면 제목 · 저자</text>
+        <text x="372" y="362" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">find_duplicate</text>
+
+        <rect x="652" y="292" width="248" height="92" rx="6" fill="#eaf2ff" stroke="#2f6fd6" stroke-width="2"/>
+        <text x="668" y="322" fill="#1d4f9e" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">③ 서재에 저장</text>
+        <text x="668" y="342" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">책 · 첫 기록을 한 번에</text>
+        <text x="668" y="362" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">add_to_shelf</text>
+
+        <!-- Supplement line (loop) -->
+        <text x="60" y="412" font-size="12"><tspan fill="#777777" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">↺ 기록을 고치면 새 줄로 덧붙이고 이전 줄은 남김</tspan><tspan fill="#555555" font-family="Consolas, ui-monospace, monospace" dx="8">append_log</tspan></text>
+
+        <!-- Layer 3: 저장 · 외부 -->
+        <rect x="60" y="516" width="248" height="92" rx="6" fill="#eaf2ff" stroke="#2f6fd6" stroke-width="2"/>
+        <text x="76" y="546" fill="#1d4f9e" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">기록 DB</text>
+        <text x="76" y="566" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">책 · 서재 · 날짜별 기록</text>
+        <text x="76" y="586" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">storage/*</text>
+
+        <rect x="356" y="516" width="248" height="92" rx="6" fill="#f1f1f1" stroke="#d6d6d6" stroke-width="1"/>
+        <text x="372" y="546" fill="#666666" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">로그인</text>
+        <text x="372" y="566" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">1주차 · 이메일 로그인</text>
+        <text x="372" y="586" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">auth</text>
+
+        <rect x="652" y="516" width="248" height="92" rx="6" fill="#eaf2ff" stroke="#2f6fd6" stroke-width="2"/>
+        <text x="668" y="546" fill="#1d4f9e" font-size="14" font-weight="600" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">도서 API 연결</text>
+        <text x="668" y="566" fill="#777777" font-size="12" font-family="'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif">국립중앙도서관 API, 응답 캐시</text>
+        <text x="668" y="586" fill="#555555" font-size="12" font-family="Consolas, ui-monospace, monospace">book_api</text>
+      </svg></div>
+  <figcaption>diagram-design으로 그린 그림. 원본은 <code>docs/diagrams/bookmark-week2.html</code></figcaption>
+</figure>
 
 <h3>1.3 만든 묶음</h3>
 <p class="note">묶음마다 맨 아래 "구현" 줄은 그 기능을 맡은 코드 이름임. 색은 코드의 종류를 뜻함.</p>

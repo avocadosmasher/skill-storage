@@ -1,5 +1,9 @@
 # skill-storage
 
+## Unreleased
+
+- `result-report`: 전체 흐름 그림을 diagram-design 스킬(MIT, 별도 설치)로 그린 SVG로 붙일 수 있게 했습니다. 틀에 그림 부품(`figure.fig`)을 더해 CSS를 v2로 올리고, diagram-design에 넘길 값과 붙이는 순서를 `references/diagram-style.md`에 두었습니다. 검사 스크립트는 그림 부품 안의 SVG 하나만 허용하고 접근성 제목 · 설명, 외부 주소 · 스크립트 금지, 칸 색과 범례 일치를 봅니다. diagram-design이 없으면 지금처럼 HTML 상자 그림을 씁니다. 이전 틀(v1)로 만든 보고서는 새 틀의 CSS와 달라 검사가 실패하므로, 다시 검사하려면 `<style>`을 새 틀 것으로 바꿔야 합니다([설계 003](./.agents/design/result-report/003-diagram-design-figure.md)).
+
 ## 1.13.0
 
 작업 결과 보고서 스킬 `result-report`를 더했습니다. 끝낸 작업을 코드를 열지 않는 사람도 읽을 수 있는 한 열짜리 HTML 보고서로 정리하고, 어느 모델이 써도 같은 모양이 나오도록 디자인 명세 · 완성 예시 · 검사 스크립트를 함께 둡니다.
