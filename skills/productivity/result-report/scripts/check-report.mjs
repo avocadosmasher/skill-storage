@@ -34,6 +34,78 @@ const textOf = (s) =>
     .trim();
 const all = (re, s) => [...s.matchAll(re)];
 
+// 그림 SVG에서 화살표 선이 출발 · 도착이 아닌 층 패널이나 칸을 가로지르는지 찾는다(diagram-style.md).
+// 가로지르면 데이터가 그 층 · 칸을 거쳐 가는 것처럼 읽힌다. 층 패널은 무채색 채움 #fafafa + 테두리 #d5d9e0,
+// 칸은 칸 색 다섯 가지의 채움(아직 안 한 것은 점선 테두리 #c8c8c8)인 <rect>로 알아본다.
+// 화살표 선은 marker-start · marker-end 가 붙은 <line> · <path>다. 곡선 구간은 시작점과 끝점을 잇는 직선으로 본다.
+function crossings(svg) {
+  const attr = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
+  const num = (tag, name, d = 0) => parseFloat(attr(tag, name) ?? d);
+  const NODE = /^#(eaf2ff|fcebf6|efeafc|f1f1f1)$/i;
+  const boxes = [];
+  for (const [tag] of all(/<rect\b[^>]*>/g, svg)) {
+    const fill = (attr(tag, "fill") || "").toLowerCase();
+    const stroke = (attr(tag, "stroke") || "").toLowerCase();
+    let kind = null;
+    if (fill === "#fafafa" && stroke === "#d5d9e0") kind = "층 패널";
+    else if (NODE.test(fill) || (stroke === "#c8c8c8" && /^(#fff|#ffffff|white)$/.test(fill))) kind = "칸";
+    if (!kind) continue;
+    const x = num(tag, "x"), y = num(tag, "y"), w = num(tag, "width"), h = num(tag, "height");
+    if (w > 0 && h > 0) boxes.push({ kind, x, y, w, h });
+  }
+  const connectors = [];
+  for (const [tag] of all(/<line\b[^>]*>/g, svg))
+    if (/marker-(start|end)=/.test(tag)) connectors.push([[num(tag, "x1"), num(tag, "y1")], [num(tag, "x2"), num(tag, "y2")]]);
+  for (const [tag] of all(/<path\b[^>]*>/g, svg)) {
+    if (!/marker-(start|end)=/.test(tag)) continue;
+    const pts = [];
+    let cx = 0, cy = 0, sx = 0, sy = 0;
+    for (const [, cmd, args] of all(/([MLHVQCTSAZmlhvqctsaz])([^MLHVQCTSAZmlhvqctsaz]*)/g, attr(tag, "d") || "")) {
+      const n = (args.match(/-?\d*\.?\d+(?:e-?\d+)?/gi) || []).map(Number);
+      const rel = cmd === cmd.toLowerCase();
+      const C = cmd.toUpperCase();
+      const step = { M: 2, L: 2, T: 2, H: 1, V: 1, Q: 4, S: 4, C: 6, A: 7, Z: 0 }[C];
+      if (C === "Z") { cx = sx; cy = sy; pts.push([cx, cy]); continue; }
+      for (let i = 0; i + step <= n.length; i += step) {
+        const g = n.slice(i, i + step);
+        if (C === "H") cx = rel ? cx + g[0] : g[0];
+        else if (C === "V") cy = rel ? cy + g[0] : g[0];
+        else { const ex = g[step - 2], ey = g[step - 1]; cx = rel ? cx + ex : ex; cy = rel ? cy + ey : ey; }
+        if (C === "M" && i === 0) { sx = cx; sy = cy; }
+        pts.push([cx, cy]);
+      }
+    }
+    if (pts.length > 1) connectors.push(pts);
+  }
+  const near = ([px, py], b, t = 2) => px >= b.x - t && px <= b.x + b.w + t && py >= b.y - t && py <= b.y + b.h + t;
+  // 선분이 상자 안쪽(테두리에서 1px 들어간 영역)을 지나는지
+  const through = ([x1, y1], [x2, y2], b) => {
+    const L = b.x + 1, R = b.x + b.w - 1, T = b.y + 1, B = b.y + b.h - 1;
+    let t0 = 0, t1 = 1;
+    const dx = x2 - x1, dy = y2 - y1;
+    for (const [p, q] of [[-dx, x1 - L], [dx, R - x1], [-dy, y1 - T], [dy, B - y1]]) {
+      if (p === 0) { if (q < 0) return false; continue; }
+      const r = q / p;
+      if (p < 0) t0 = Math.max(t0, r); else t1 = Math.min(t1, r);
+      if (t0 > t1) return false;
+    }
+    return t1 - t0 > 1e-6;
+  };
+  const found = [];
+  for (const pts of connectors) {
+    const ends = [pts[0], pts[pts.length - 1]];
+    for (const b of boxes) {
+      if (ends.some((e) => near(e, b))) continue;
+      for (let i = 1; i < pts.length; i++)
+        if (through(pts[i - 1], pts[i], b)) {
+          found.push(`그림 SVG의 화살표 선이 출발 · 도착이 아닌 ${b.kind}(x=${b.x}, y=${b.y})를 가로지름: (${ends[0].join(",")}) → (${ends[1].join(",")}). 그 층 · 칸 바깥으로 돌려 긋는다`);
+          break;
+        }
+    }
+  }
+  return [...new Set(found)];
+}
+
 // 0. 1.2 그림의 SVG(figure.fig 안, references/diagram-style.md)는 여기서 따로 검사하고 나머지 검사에서는 뺀다
 const FILL = { "b-mine": /#eaf2ff\b/i, "b-peer": /#fcebf6\b/i, "b-both": /#efeafc\b/i, "b-past": /#f1f1f1\b/i, "b-next": /#c8c8c8\b/i };
 const figures = all(/<figure class="fig">([\s\S]*?)<\/figure>/g, raw);
@@ -66,6 +138,7 @@ for (const [, inner] of figures) {
     }
   }
   for (const [cls, re] of Object.entries(FILL)) if (re.test(svg)) figUsed.add(cls);
+  for (const msg of crossings(svg)) fails.push(msg);
   svgTexts.push(svg.replace(/<style>[\s\S]*?<\/style>/g, " "));
 }
 const html = raw.replace(/(<figure class="fig">[\s\S]*?)<svg\b[\s\S]*?<\/svg>/g, "$1");
