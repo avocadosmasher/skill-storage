@@ -1,0 +1,3 @@
+interface:
+  display_name: "Demo Recorder"
+  short_description: "브라우저 시연을 시나리오대로 녹화해 자막·강조·브릿지 카드를 입힌 영상으로"
