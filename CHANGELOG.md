@@ -1,5 +1,9 @@
 # skill-storage
 
+## Unreleased
+
+- `in-progress/demo-recorder`: 브라우저 시연 자동 녹화 베타 스킬을 더했습니다. 시나리오 파일 하나로 ego lite를 조작하며 페이지 화면만 찍고(초당 약 15~25장), 편집에서 자막·강조 상자·순서 번호·커서·장면 사이 브릿지 카드(아키텍처 흐름 띠)를 입혀 1920×1080 30fps MP4와 SRT를 만듭니다. 기다림은 녹화 뒤에도 자르기·배속을 고를 수 있습니다. 실명·아바타·이메일은 캡처 전에 페이지에서 흐리게 하고 출력 파일에는 남기지 않습니다. 시험 실행·미리보기 시트·전환 직후 프레임 시트로 녹화 전후를 확인합니다. 첫 공모전 데모를 네 번 고치며 받은 피드백을 원칙(`references/demo-guidelines.md`)과 기본 영상 구조(`references/structures/usecase-flow.md`)로 남겼습니다([설계](./.agents/design/demo-recorder/README.md)). 플러그인에는 포함되지 않습니다.
+
 ## 1.14.0
 
 `result-report`의 전체 흐름 그림을 diagram-design 스킬로 그린 SVG로 붙일 수 있게 했습니다. 흐름 선이 다른 층을 지나가 오해를 부르는 그림은 검사가 막습니다.

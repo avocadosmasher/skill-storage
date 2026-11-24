@@ -8,4 +8,4 @@
 npx skills@latest add avocadosmasher/skill-storage --skill=<이름>
 ```
 
-아직 없습니다.
+- [demo-recorder](./demo-recorder/SKILL.md): 브라우저 시연을 시나리오대로 ego lite에서 조작하며 녹화하고, 자막·강조 상자·번호·장면 브릿지 카드(아키텍처 흐름 띠)·기다림 자르기를 입혀 MP4로 만든다
